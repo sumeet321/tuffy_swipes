@@ -121,7 +121,6 @@ export default function HomeScreen() {
     );
   };
 
-  console.log("*********", user?.photoURL);
 
   return (
     <SafeAreaView style={tw`flex-1`}>
@@ -144,7 +143,7 @@ export default function HomeScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity>
-          <Image style={tw`top-2 h-12 w-10`} source={require('../assets/icons/tuffy.png')}/>
+          <Image style={tw`h-14 w-10`} source={require('../assets/icons/tuffy.png')}/>
         </TouchableOpacity>
 
         <TouchableOpacity onPress={() => navigation.navigate('Chat')}

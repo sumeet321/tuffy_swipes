@@ -34,6 +34,31 @@ export default function ProfilePicture() {
   const db = getFirestore(); // Initialize Firestore
 
 
+
+  const updateUserProfile = () => {
+    const userDocRef = doc(db, 'users', user.uid);
+
+    setDoc(userDocRef, {
+      id: user.uid,
+      firstName: firstName,
+      lastName: lastName,
+      photoURL: image,
+      job: job,
+      age: age,
+      gender: gender,
+      preferences: preferences,
+      timestamp: serverTimestamp(),
+    })
+      .then(() => {
+        navigation.navigate('Home');
+      })
+      .catch((error) => {
+        alert(error.message);
+      });
+  };
+
+
+  /*
   const updateUserProfile = () => {
     setDoc(doc(db, 'users', user.uid), {
       id: user.uid,
@@ -53,6 +78,8 @@ export default function ProfilePicture() {
         alert(error.message);
       });
   };
+  */
+  
 
   useEffect(() => {
     if (user) {
@@ -72,6 +99,10 @@ export default function ProfilePicture() {
           if (docSnapshot.exists()) {
             const userData = docSnapshot.data();
             if (userData) {
+              // Only set the image state if it's not set
+              if (image === null) {
+                setImage(userData.photoURL || null);
+              }
               setJob(userData.job || '');
               setAge(userData.age || '');
               setGender(userData.gender || null);
@@ -83,7 +114,7 @@ export default function ProfilePicture() {
           console.error('Error fetching user data:', error);
         });
     }
-  }, [image, user]);
+  }, [user, image, db]);
 
   const handleLogout = async () => {
     await signOut(auth);
@@ -142,7 +173,7 @@ export default function ProfilePicture() {
           {user ? (
             <>
               <Text style={tw`text-2xl font-bold p-1 font-bold text-center`}>
-                Welcome {firstName} {lastName}
+                {firstName} {lastName} Settings
               </Text>
               <Text style={tw`text-center p-4 font-bold text-red-400`}>
                 The Profile Picture
@@ -181,14 +212,14 @@ export default function ProfilePicture() {
                 <TouchableOpacity
                   onPress={() => setGender('male')}
                   style={tw`p-2 bg-blue-500 rounded-md mx-2 ${
-                    gender === 'male' ? 'bg-opacity-50' : 'bg-opacity-20'
+                    gender === 'male' ? 'bg-opacity-70' : 'bg-opacity-20'
                   }`}>
                   <Text style={tw`text-white`}>Male</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={() => setGender('female')}
                   style={tw`p-2 bg-pink-500 rounded-md mx-2 ${
-                    gender === 'female' ? 'bg-opacity-50' : 'bg-opacity-20'
+                    gender === 'female' ? 'bg-opacity-70' : 'bg-opacity-20'
                   }`}>
                   <Text style={tw`text-white`}>Female</Text>
                 </TouchableOpacity>
@@ -199,21 +230,21 @@ export default function ProfilePicture() {
                 <TouchableOpacity
                   onPress={() => setPreferences('male')}
                   style={tw`p-2 bg-blue-500 rounded-md mx-2 ${
-                    preferences === 'male' ? 'bg-opacity-50' : 'bg-opacity-20'
+                    preferences === 'male' ? 'bg-opacity-70' : 'bg-opacity-20'
                   }`}>
                   <Text style={tw`text-white`}>Male</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={() => setPreferences('female')}
                   style={tw`p-2 bg-pink-500 rounded-md mx-2 ${
-                    preferences === 'female' ? 'bg-opacity-50' : 'bg-opacity-20'
+                    preferences === 'female' ? 'bg-opacity-70' : 'bg-opacity-20'
                   }`}>
                   <Text style={tw`text-white`}>Female</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={() => setPreferences('both')}
                   style={tw`p-2 bg-purple-500 rounded-md mx-2 ${
-                    preferences === 'both' ? 'bg-opacity-50' : 'bg-opacity-20'
+                    preferences === 'both' ? 'bg-opacity-70' : 'bg-opacity-20'
                   }`}>
                   <Text style={tw`text-white`}>Both</Text>
                 </TouchableOpacity>
