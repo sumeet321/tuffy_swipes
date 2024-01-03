@@ -1,0 +1,261 @@
+import React, { useState, useRef, useLayoutEffect, useEffect } from 'react';
+import { View, Text, TouchableOpacity, Button, Image, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { auth } from '../config/firebase';
+import { useNavigation } from '@react-navigation/native';
+import tw from 'tailwind-react-native-classnames';
+import useAuth from '../hooks/useAuth';
+import {AntDesign, Entypo, Ionicons} from "@expo/vector-icons";
+import Swiper from 'react-native-deck-swiper';
+import { doc, onSnapshot, collection, snapshotEqual, setDoc, getDocs, query, where, getDoc, documentSnapshot, serverTimestamp } from '@firebase/firestore';
+import { db } from '../config/firebase';
+import generateId from '../lib/generateId';
+
+export default function HomeScreen() {
+  const navigation = useNavigation();
+  const { user } = useAuth();
+  const [profiles, setProfiles] = useState([]);
+  console.log(user);
+  const swipeRef = useRef(null);
+
+  useEffect(() => {
+    let unsub;
+    
+    if(user && user.uid)
+    {
+      const fetchCards = async () => {
+        const passes = await getDocs(collection(db, "users", user.uid, "passes")).then((snapshot) => snapshot.docs.map((doc) => doc.id));
+        const swipes = await getDocs(collection(db, "users", user.uid, "swipes")).then((snapshot) => snapshot.docs.map((doc) => doc.id));
+
+        const passedUserIds = passes.length > 0 ? passes : ['test'];
+        const swipedUserIds = swipes.length > 0 ? swipes : ['test'];
+
+
+        unsub = onSnapshot(
+          query(collection(db, 'users'), where('id', 'not-in', [...passedUserIds, ...swipedUserIds])), 
+          (snapshot) => {
+            const newProfiles = snapshot.docs
+              .filter((doc) => doc.id !== user.uid)
+              .map((doc) => ({ id: doc.id, ...doc.data() }));
+    
+            console.log("Fetched profiles: ", newProfiles);
+            setProfiles(newProfiles);
+          }
+        );
+      };
+      
+        /*
+        unsub = onSnapshot(
+          query(collection(db, 'users'), where('id', 'not-in', [...passedUserIds, ...swipedUserIds])), 
+          (snapshot) => {
+            setProfiles(
+              snapshot.docs.filter((doc) => doc.id !== user.uid).map((doc) => ({
+                id: doc.id,
+                ...doc.data(),
+              }))
+            );
+          }
+        );
+      };
+      */
+
+      fetchCards();
+  }
+    return unsub;
+  }, [user, db]);
+
+
+  const swipeLeft = (cardIndex) => {
+    if (!profiles[cardIndex]) return;
+
+    const userSwiped = profiles[cardIndex];
+    console.log(`You swiped PASS on ${userSwiped.firstName}`);
+
+    setDoc(doc(db, 'users', user.uid, 'passes', userSwiped.id), userSwiped);
+  };
+
+
+  const swipeRight = async(cardIndex) => {
+    if (!profiles[cardIndex]) return;
+
+    const userSwiped = profiles[cardIndex];
+    const loggedInProfile = await(await getDoc(doc(db, 'users', user.uid))).data();
+
+    // Check if the user swiped on you
+    getDoc(doc(db, 'users', userSwiped.id, 'swipes', user.uid)).then((documentSnapshot) => {
+      if (documentSnapshot.exists())
+      {
+        // user has swiped on your before you swiped on them
+        // Create a match
+        console.log(`You MATCHED with ${userSwiped.firstName}`);
+        setDoc(
+          doc(db, "users", user.uid, "swipes", userSwiped.id),
+          userSwiped
+        );
+
+        // Match creation
+        setDoc(doc(db, 'matches', generateId(user.uid, userSwiped.id)), {
+          users: {
+            [user.uid]: loggedInProfile,
+            [userSwiped.id]: userSwiped
+          },
+          usersMatched: [user.uid, userSwiped.id],
+          timestamp: serverTimestamp(),
+        });
+
+        navigation.navigate('Match', {
+          loggedInProfile,
+          userSwiped,
+        });
+      }
+      else
+      {
+        console.log(`You SWIPED on ${userSwiped.firstName} (${userSwiped.job})`);
+
+      setDoc(
+        doc(db, "users", user.uid, "swipes", userSwiped.id),
+        userSwiped
+      );
+      }
+    }
+    );
+  };
+
+  console.log("*********", user?.photoURL);
+
+  return (
+    <SafeAreaView style={tw`flex-1`}>
+      {/*Beginning of Header*/}
+        <View style={tw`items-center relative`}>
+          <TouchableOpacity onPress={() => navigation.navigate('Picture')}
+          style={tw`absolute left-5 top-3`}>
+            {user?.photoURL ? (
+              <Image 
+              style={tw`h-10 w-10 rounded-full`}
+              source={{uri: user?.photoURL}} 
+              />
+            ): (
+              <Image
+                style={tw`h-10 w-10 rounded-full`}
+                // Default profile picture
+                source={require('../assets/icons/tuffy.png')}
+              />
+            )}
+          </TouchableOpacity>
+
+          <TouchableOpacity>
+          <Image style={tw`top-2 h-12 w-10`} source={require('../assets/icons/tuffy.png')}/>
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={() => navigation.navigate('Chat')}
+        style={tw`absolute right-5 top-4`}>
+          <Ionicons name='chatbubbles-sharp' size={30} color='#FF8001'/>
+        </TouchableOpacity>
+        </View>
+      {/*End of Header*/}
+
+      {/*Cards*/}
+      <View style={tw`flex-1 -mt-6`}>
+        <Swiper 
+        ref={swipeRef}
+        containerStyle={{backgroundColor: "transparent"}}
+        cards={profiles}
+        stackSize={5}
+        cardIndex={0}
+        animateCardOpacity
+        verticalSwipe={false}
+        onSwipedLeft={(cardIndex) => {
+          console.log("Swipe PASS")
+          swipeLeft(cardIndex);
+        }}
+        onSwipedRight={(cardIndex) =>{
+          console.log("Swipe MATCH")
+          swipeRight(cardIndex);
+        }}
+        backgroundColor={'#4fd0e9'}
+        overlayLabels={{
+          left: {
+            title: "PASS",
+            style: {
+              label: {
+                textAlign: "right",
+                color: "red",
+              },
+            },
+          },
+          right: {
+            title: "MATCH",
+            style: {
+              label: {
+                textAlign: "left",
+                color: "green",
+              },
+            },
+          },
+        }}
+          renderCard={(card) => card ? (
+            <View key={card.id} style={tw`relative bg-white h-3/4 rounded-xl`}>
+              <Image 
+                style={tw`absolute top-0 h-full w-full rounded-xl `}
+                source={{uri: card.photoURL}}
+              />
+
+            <View style={[tw`absolute bottom-0 bg-white w-full flex-row justify-between items-center h-20 px-6 py-2 rounded-b-xl`, styles.cardShadow]}>
+              <View>
+                <Text style={tw`text-xl font-bold`}>
+                  {card.firstName} {card.lastName}
+                </Text>
+                <Text>{card.job}</Text>
+              </View>
+              <Text style={tw`text-2xl font-bold`}>{card.age}</Text>
+            </View>
+            </View>
+          ) : (
+            <View
+            style={[
+              tw`relative bg-white h-3/4 rounded-xl justify-center items-center`,
+              styles.cardShadow,
+            ]}
+          >
+          <Text style={tw`font-bold pb-5`}>No more profiles</Text>
+
+          <Image
+            style={tw`h-20 w-full`}
+            height = {100}
+            width = {100}
+            //source = {{uri: ""}}
+          />
+        </View>
+        )}
+      />
+      
+    </View>
+
+      <View style={tw`flex flex-row justify-evenly`}>
+        <TouchableOpacity onPress={() => swipeRef.current.swipeLeft()}
+          style={tw`items-center justify-center rounded-full w-16 h-16 bg-red-200`}>
+            <Entypo name='cross' size={24} color='red'/>
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={() => swipeRef.current.swipeRight()}
+          style={tw`items-center justify-center rounded-full w-16 h-16 bg-green-200`}>
+            <AntDesign name='heart' size={24} color='green'/>
+        </TouchableOpacity>
+      </View>
+    </SafeAreaView>
+  );
+};
+
+const styles = StyleSheet.create({
+  cardShadow:{
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height:1,
+    },
+  shadowOpacity: 0.2,
+  shadowRadius: 1.41,
+
+  elevation: 2,
+},
+});
