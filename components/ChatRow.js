@@ -45,7 +45,7 @@ const ChatRow = ({matchDetails}) => {
         <Text style={tw`text-lg font-semibold`}>
             {matchedUserInfo?.firstName}
         </Text>
-        <Text>{lastMessage || "Say Hi First!"}</Text>
+        <Text>{lastMessage || "Say hi first!"}</Text>
       </View>
     </TouchableOpacity>
   );

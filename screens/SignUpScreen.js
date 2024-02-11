@@ -9,12 +9,13 @@ import {
   Keyboard,
   TouchableWithoutFeedback,
   KeyboardAvoidingView,
+  Alert,
 } from 'react-native';
 import { themeColors } from '../theme';
 import { useNavigation } from '@react-navigation/native';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { auth } from '../config/firebase';
-import {Ionicons, Foundation} from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import tw from 'tailwind-react-native-classnames';
 
 export default function SignUpScreen() {
@@ -24,6 +25,7 @@ export default function SignUpScreen() {
   const [email, setEmail] = useState('');
   const [number, setNumber] = useState('');
   const [password, setPassword] = useState('');
+  const [errorMessage, setErrorMessage] = useState(null);
 
   // Create refs for each TextInput
   const lastNameRef = useRef(null);
@@ -44,9 +46,26 @@ export default function SignUpScreen() {
         await updateProfile(userCredential.user, { displayName });
         // If registration is successful, navigate to the 'Home' screen or any other screen
         navigation.navigate('Info');
-        // If registration is successful, navigate to the 'Info' screen
       } catch (err) {
         console.log('Got error:', err.message);
+
+        // Check if the error code is for email already in use
+        if (err.code === 'auth/email-already-in-use') {
+          setErrorMessage('Email address is already in use. Please use a different email.');
+          Alert.alert('Error', errorMessage || 'Email address is already in use. Please use a different email.');
+        }
+        else if (err.code == 'auth/weak-password') {
+          setErrorMessage('Password should be at least 6 characters.')
+          Alert.alert('Error', errorMessage || 'Password should be at least 6 characters');
+
+        }
+        else {
+          setErrorMessage('An error occurred during registration. Please try again.');
+          Alert.alert('Error', errorMessage || err.message);
+        }
+
+        // Display an alert with the error message
+        //Alert.alert('Error', errorMessage || 'Email address is already in use. Please use a different email.');
       }
     }
   };
@@ -120,10 +139,15 @@ export default function SignUpScreen() {
                 onChangeText={(value) => setPassword(value)}
                 placeholder="Enter Password"
               />
+              {errorMessage && (
+                <Text style={{ color: 'red', textAlign: 'center', marginTop: 10 }}>
+                  {errorMessage}
+                </Text>
+              )}
               <TouchableOpacity
                 style={{ padding: 24, backgroundColor: '#FF8001', borderRadius: 20, marginBottom: 8 }}
                 onPress={handleSubmit}>
-                <Text style={{ fontSize: 20, fontWeight: 'bold', textAlign: 'center', color: 'black' }}>
+                <Text style={{ fontSize: 20, fontWeight: 'bold', textAlign: 'center', color: 'white' }}>
                   Sign Up
                 </Text>
               </TouchableOpacity>

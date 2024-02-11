@@ -15,15 +15,15 @@ export default function WelcomeScreen() {
                 <View style={{ flexDirection: 'row', justifyContent: 'center' }}>
                     <Image
                         source={require('../assets/icons/tuffy.png')}
-                        style={{width: 400, height: 550}}
+                        style={{width: 350, height: 500, top: 20}}
                     />
                 </View>
-                <View style={{ marginVertical: 16 }}>
+                <View style={{ marginVertical: 50 }}>
                     <TouchableOpacity
                         onPress={() => navigation.navigate('SignUp')}
                         style={{ paddingVertical: 12, backgroundColor: '#FF8001', marginHorizontal: 7, borderRadius: 8 }}
                     >
-                        <Text style={{ fontSize: 18, fontWeight: 'bold', textAlign: 'center', color: 'black' }}>
+                        <Text style={{ fontSize: 18, fontWeight: 'bold', textAlign: 'center', color: 'white' }}>
                             Sign Up
                         </Text>
                     </TouchableOpacity>

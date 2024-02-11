@@ -1,48 +1,52 @@
+import React, { useState, useRef } from 'react';
 import {
-    View,
-    Text,
-    Keyboard,
-    TouchableOpacity,
-    Image,
-    TextInput,
-    SafeAreaView,
-    KeyboardAvoidingView, TouchableWithoutFeedback
-  } from 'react-native';
-  import React, { useState, useRef } from 'react';
-  import { themeColors } from '../theme';
-  import { useNavigation } from '@react-navigation/native';
-  import { signInWithEmailAndPassword, updateProfile } from 'firebase/auth';
-  import { auth } from '../config/firebase';
-  import {Ionicons, Foundation} from '@expo/vector-icons';
-  import tw from 'tailwind-react-native-classnames';
+  View,
+  Text,
+  Keyboard,
+  TouchableOpacity,
+  Image,
+  TextInput,
+  SafeAreaView,
+  KeyboardAvoidingView,
+  TouchableWithoutFeedback,
+  Alert, // Import Alert for displaying error messages
+} from 'react-native';
+import { themeColors } from '../theme';
+import { useNavigation } from '@react-navigation/native';
+import { signInWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { auth } from '../config/firebase';
+import { Ionicons } from '@expo/vector-icons';
+import tw from 'tailwind-react-native-classnames';
 
-  
-  export default function LoginScreen() {
-    const navigation = useNavigation();
-  
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-  
-    const passwordRef = useRef(null);
-  
-    const handleSubmit = async () => {
-      if (email && password) {
-        try {
-          const userCredential = await signInWithEmailAndPassword(auth, email, password);
-          const user = userCredential.user;
-  
-          if (user && user.photoURL) {
-            updateProfile(user, { photoURL: user.photoURL });
-          }
-          navigation.navigate('Home');
-        } catch (err) {
-          console.log('got error: ', err.message);
+export default function LoginScreen() {
+  const navigation = useNavigation();
+
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [errorMessage, setErrorMessage] = useState(null); // State for error message
+
+  const passwordRef = useRef(null);
+
+  const handleSubmit = async () => {
+    if (email && password) {
+      try {
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        if (user && user.photoURL) {
+          updateProfile(user, { photoURL: user.photoURL });
         }
+        navigation.navigate('Home');
+      } catch (err) {
+        console.log('got error: ', err.message);
+        setErrorMessage('Invalid email or password. Please try again.'); // Set error message
+        Alert.alert('Error', 'Invalid email or password. Please try again.');
       }
-    };
-  
-    return (
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+    }
+  };
+
+  return (
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <KeyboardAvoidingView
         style={{ flex: 1, backgroundColor: themeColors.bg }}
         behavior="padding" // Adjust behavior based on your needs
@@ -102,12 +106,17 @@ import {
               />
               <TouchableOpacity
                 style={{ flexDirection: 'row', justifyContent: 'flex-end' }}
-                onPress={() => console.log('Forgot Password?')}>
+                onPress={() => navigation.navigate('Forgot')}>
                 <Text style={{ color: 'gray', marginBottom: 5 }}>Forgot Password?</Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={handleSubmit} style={{ padding: 24, backgroundColor: '#FF8001', borderRadius: 20 }}>
-                <Text style={{ fontSize: 20, fontWeight: 'bold', textAlign: 'center', color: 'black' }}>Login</Text>
+                <Text style={{ fontSize: 20, fontWeight: 'bold', textAlign: 'center', color: 'white' }}>Login</Text>
               </TouchableOpacity>
+              {errorMessage && (
+                <Text style={{ color: 'red', textAlign: 'center', marginTop: 10 }}>
+                  {errorMessage}
+                </Text>
+              )}
             </View>
             <Text style={{ fontSize: 20, color: 'gray', fontWeight: 'bold', textAlign: 'center', paddingTop: 5 }}>Or</Text>
             <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 7 }}>
@@ -119,7 +128,6 @@ import {
           </View>
         </View>
       </KeyboardAvoidingView>
-      </TouchableWithoutFeedback>
-    );
-  }
-  
+    </TouchableWithoutFeedback>
+  );
+}

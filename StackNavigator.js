@@ -12,6 +12,7 @@ import ProfilePicture from './screens/ProfilePicture';
 import InformationScreen from './screens/InformationScreen';
 import MatchScreen from './screens/MatchScreen';
 import MessagesScreen from './screens/MessagesScreen';
+import ForgotScreen from './screens/ForgotScreen';
 
 
 const Stack = createNativeStackNavigator();
@@ -46,6 +47,7 @@ export default function StackNavigator() {
           <Stack.Screen name="Welcome" options={{headerShown: false}} component={WelcomeScreen} />
           <Stack.Screen name="Login" options={{headerShown: false}} component={LoginScreen} />
           <Stack.Screen name="SignUp" options={{headerShown: false}} component={SignUpScreen} />
+          <Stack.Screen name="Forgot" options={{headerShown: false}} component={ForgotScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     )
