@@ -1,6 +1,7 @@
 import React, { useState, useRef, useLayoutEffect, useEffect } from 'react';
 import { View, Text, TouchableOpacity, Button, Image, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
 import { auth } from '../config/firebase';
 import { useNavigation } from '@react-navigation/native';
 import tw from 'tailwind-react-native-classnames';
@@ -10,6 +11,8 @@ import Swiper from 'react-native-deck-swiper';
 import { doc, onSnapshot, collection, snapshotEqual, setDoc, getDocs, query, where, getDoc, documentSnapshot, serverTimestamp } from '@firebase/firestore';
 import { db } from '../config/firebase';
 import generateId from '../lib/generateId';
+import { CountdownCircleTimer } from 'react-native-countdown-circle-timer';
+
 
 export default function HomeScreen() {
   const navigation = useNavigation();
@@ -17,6 +20,11 @@ export default function HomeScreen() {
   const [profiles, setProfiles] = useState([]);
   console.log(user);
   const swipeRef = useRef(null);
+  const [isPlaying, setIsPlaying] = React.useState(false);
+  const [countdownFinished, setCountdownFinished] = useState(null);
+  const [countdownKey, setCountdownKey] = useState(0); // Initialize countdownKey state variable
+
+
 
   useEffect(() => {
     let unsub;
@@ -65,17 +73,45 @@ export default function HomeScreen() {
   }, [user, db]);
 
 
+  useEffect(() => {
+    if (countdownFinished) {
+      swipeRef.current.swipeLeft();
+    }
+    if (profiles.length === 0) {
+      setIsPlaying(false);
+    }
+  }, [countdownFinished, profiles]);
+
+  
+
+    // Pause the countdown timer when the user navigates away from the screen
+    useFocusEffect(
+      React.useCallback(() => {
+        setIsPlaying(true);
+        return () => {
+          setIsPlaying(false);
+        };
+      }, [])
+    );
+
+
   const swipeLeft = (cardIndex) => {
+    setCountdownFinished(false); // Turn from true to false
+    setIsPlaying(true); // Restart the timer
     if (!profiles[cardIndex]) return;
 
     const userSwiped = profiles[cardIndex];
     console.log(`You swiped PASS on ${userSwiped.firstName}`);
 
     setDoc(doc(db, 'users', user.uid, 'passes', userSwiped.id), userSwiped);
+
+    setCountdownKey((prevKey) => prevKey + 1);
   };
 
 
   const swipeRight = async(cardIndex) => {
+    setCountdownFinished(false); 
+    setIsPlaying(true); // Restart the timer
     if (!profiles[cardIndex]) return;
 
     const userSwiped = profiles[cardIndex];
@@ -87,6 +123,8 @@ export default function HomeScreen() {
       {
         // user has swiped on your before you swiped on them
         // Create a match
+        setCountdownFinished(true);
+        setIsPlaying(false); // Restart the timer
         console.log(`You MATCHED with ${userSwiped.firstName}`);
         setDoc(
           doc(db, "users", user.uid, "swipes", userSwiped.id),
@@ -119,6 +157,8 @@ export default function HomeScreen() {
       }
     }
     );
+
+    setCountdownKey((prevKey) => prevKey + 1);
   };
 
 
@@ -216,7 +256,7 @@ export default function HomeScreen() {
               styles.cardShadow,
             ]}
           >
-          <Text style={tw`font-bold pb-5`}>No more profiles</Text>
+          <Text style={tw`font-bold pb-5`}>No more profiles. Check back later.</Text>
 
           <Image
             style={tw`h-20 w-full`}
@@ -229,15 +269,41 @@ export default function HomeScreen() {
       />
       
     </View>
+    
+    
+    {/*Countdown*/}
+    <View style={{flex:0.001 ,justifyContent: 'center', alignItems: 'center', backgroundColor: '#ecf0f1'}}>
+      <CountdownCircleTimer
+        key={countdownKey}
+        size={150}
+        isPlaying={isPlaying}
+        duration={10}
+        colors={["#004777", "#F7B801", "#A30000", "#A30000"]}
+        colorsTime={[10, 6, 3, 0]}
+        onComplete={() => {
+          setCountdownFinished(true);
+          setIsPlaying(false);
+          return { shouldRepeat: true, duration: .1};
+        }}
+        updateInterval={1}
+    >
+      {({ remainingTime, color }) => (
+        <Text style={{ color, fontSize: 40 }}>
+          {remainingTime}
+        </Text>
+      )}
+    </CountdownCircleTimer>
+  </View>
 
-      <View style={tw`flex flex-row justify-evenly`}>
+
+      <View style={tw`flex flex-row justify-between`}>
         <TouchableOpacity onPress={() => swipeRef.current.swipeLeft()}
-          style={tw`items-center justify-center rounded-full w-16 h-16 bg-red-200`}>
+          style={[tw`items-center justify-center rounded-full w-16 h-16 bg-red-200`, {marginLeft: 40}]}>
             <Entypo name='cross' size={24} color='red'/>
         </TouchableOpacity>
 
         <TouchableOpacity onPress={() => swipeRef.current.swipeRight()}
-          style={tw`items-center justify-center rounded-full w-16 h-16 bg-green-200`}>
+          style={[tw`items-center justify-center rounded-full w-16 h-16 bg-green-200`, {marginRight: 40}]}>
             <AntDesign name='heart' size={24} color='green'/>
         </TouchableOpacity>
       </View>

@@ -17,7 +17,7 @@ import { useNavigation } from '@react-navigation/native';
 import tw from 'tailwind-react-native-classnames';
 import useAuth from '../hooks/useAuth';
 import * as Permissions from 'expo-permissions';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp, getFirestore } from 'firebase/firestore';
 import {Ionicons, Foundation} from '@expo/vector-icons';
 
 export default function ProfilePicture() {
@@ -31,6 +31,7 @@ export default function ProfilePicture() {
   const [gender, setGender] = useState(null);
   const [preferences, setPreferences] = useState(null);
   const auth = getAuth();
+  const db = getFirestore(); // Initialize Firestore
 
   const updateUserProfile = () => {
     setDoc(doc(db, 'users', user.uid), {
@@ -51,6 +52,7 @@ export default function ProfilePicture() {
         alert(error.message);
       });
   };
+
 
   useEffect(() => {
     if (user) {
