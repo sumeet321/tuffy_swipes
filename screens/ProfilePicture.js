@@ -57,28 +57,6 @@ export default function ProfilePicture() {
       });
   };
 
-
-  /*
-  const updateUserProfile = () => {
-    setDoc(doc(db, 'users', user.uid), {
-      id: user.uid,
-      firstName: firstName,
-      lastName: lastName,
-      photoURL: image,
-      job: job,
-      age: age,
-      gender: gender,
-      preferences: preferences,
-      timestamp: serverTimestamp(),
-    })
-      .then(() => {
-        navigation.navigate('Home');
-      })
-      .catch((error) => {
-        alert(error.message);
-      });
-  };
-  */
   
 
   useEffect(() => {

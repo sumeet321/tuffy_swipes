@@ -34,7 +34,7 @@ const MessagesScreen = () => {
         addDoc(collection(db, 'matches', matchDetails.id, 'messages'), {
             timestamp: serverTimestamp(),
             userId: user.uid,
-            displayName: user.firstName + user.lastName,
+            displayName: user.displayName,
             photoURL: matchDetails.users[user.uid].photoURL,
             message: input,
         });

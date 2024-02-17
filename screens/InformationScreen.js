@@ -12,12 +12,12 @@ import {
 import { signOut, updateProfile, getAuth } from 'firebase/auth';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
-import { auth, db } from '../config/firebase';
+import { auth, db} from '../config/firebase';
 import { useNavigation } from '@react-navigation/native';
 import tw from 'tailwind-react-native-classnames';
 import useAuth from '../hooks/useAuth';
 import * as Permissions from 'expo-permissions';
-import { doc, setDoc, serverTimestamp, getFirestore } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp, getFirestore, getDoc } from 'firebase/firestore';
 import {Ionicons, Foundation} from '@expo/vector-icons';
 
 export default function ProfilePicture() {
@@ -32,6 +32,7 @@ export default function ProfilePicture() {
   const [preferences, setPreferences] = useState(null);
   const auth = getAuth();
   const db = getFirestore(); // Initialize Firestore
+  
 
   const updateUserProfile = () => {
     setDoc(doc(db, 'users', user.uid), {

@@ -25,52 +25,66 @@ export default function HomeScreen() {
   const [countdownKey, setCountdownKey] = useState(0); // Initialize countdownKey state variable
 
 
+  // Define fetchCards function
+  const fetchCards = async () => {
+    try {
+      if (user && user.uid) {
+        const passesSnapshot = await getDocs(collection(db, "users", user.uid, "passes"));
+        const passes = passesSnapshot.docs.map((doc) => doc.id);
 
-  useEffect(() => {
-    let unsub;
-    
-    if(user && user.uid)
-    {
-      const fetchCards = async () => {
-        const passes = await getDocs(collection(db, "users", user.uid, "passes")).then((snapshot) => snapshot.docs.map((doc) => doc.id));
-        const swipes = await getDocs(collection(db, "users", user.uid, "swipes")).then((snapshot) => snapshot.docs.map((doc) => doc.id));
+        const swipesSnapshot = await getDocs(collection(db, "users", user.uid, "swipes"));
+        const swipes = swipesSnapshot.docs.map((doc) => doc.id);
 
         const passedUserIds = passes.length > 0 ? passes : ['test'];
         const swipedUserIds = swipes.length > 0 ? swipes : ['test'];
 
+        // Get user's gender preference
+        const userDocSnapshot = await getDoc(doc(db, 'users', user.uid));
+        const userData = userDocSnapshot.data();
+        const userGenderPreference = userData.preferences;
 
-        unsub = onSnapshot(
-          query(collection(db, 'users'), where('id', 'not-in', [...passedUserIds, ...swipedUserIds])), 
-          (snapshot) => {
-            const newProfiles = snapshot.docs
-              .filter((doc) => doc.id !== user.uid)
-              .map((doc) => ({ id: doc.id, ...doc.data() }));
-    
-            console.log("Fetched profiles: ", newProfiles);
-            setProfiles(newProfiles);
-          }
-        );
-      };
-      
-        /*
-        unsub = onSnapshot(
-          query(collection(db, 'users'), where('id', 'not-in', [...passedUserIds, ...swipedUserIds])), 
-          (snapshot) => {
-            setProfiles(
-              snapshot.docs.filter((doc) => doc.id !== user.uid).map((doc) => ({
-                id: doc.id,
-                ...doc.data(),
-              }))
-            );
-          }
-        );
-      };
-      */
+        let queryRef;
+        if (userGenderPreference === 'male') {
+          queryRef = query(collection(db, 'users'), where('gender', '==', 'male'));
+        } else if (userGenderPreference === 'female') {
+          queryRef = query(collection(db, 'users'), where('gender', '==', 'female'));
+        } else {
+          queryRef = collection(db, 'users');
+        }
 
+        const querySnapshot = await getDocs(queryRef);
+        const profiles = querySnapshot.docs
+          .filter((doc) => doc.id !== user.uid)
+          .map((doc) => ({ id: doc.id, ...doc.data() }));
+
+        // Filter out passed and swiped profiles
+        const filteredProfiles = profiles.filter(profile => !passedUserIds.includes(profile.id) && !swipedUserIds.includes(profile.id));
+
+        console.log("Fetched profiles: ", filteredProfiles);
+        setProfiles(filteredProfiles);
+      }
+    } catch (error) {
+      console.error("Error fetching profiles:", error);
+    }
+  };
+
+  // useEffect hook to fetch cards initially
+  useEffect(() => {
+    let unsub;
+    if (user && user.uid) {
       fetchCards();
-  }
+    }
     return unsub;
   }, [user, db]);
+
+  // useFocusEffect hook to refetch cards when screen comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      if (user && user.uid) {
+        fetchCards();
+      }
+    }, [user])
+  );
 
 
   useEffect(() => {
@@ -82,7 +96,7 @@ export default function HomeScreen() {
     }
   }, [countdownFinished, profiles]);
 
-  
+
 
     // Pause the countdown timer when the user navigates away from the screen
     useFocusEffect(
