@@ -11,8 +11,12 @@
     "dev:tailwind": "concurrently \"tailwindcss --input input.css --output tailwind.css --no-autoprefixer --watch\" \"tailwind-rn --watch\""
   },
   "dependencies": {
+    "@firebase/storage": "^0.12.1",
     "@heroicons/react": "^2.1.1",
     "@react-native-async-storage/async-storage": "^1.21.0",
+    "@react-native-community/datetimepicker": "^7.6.2",
+    "@react-native-firebase/app": "^19.2.2",
+    "@react-native-firebase/auth": "^19.2.2",
     "@react-navigation/native": "^6.1.9",
     "@react-navigation/native-stack": "^6.9.17",
     "expo": "^49.0.21",
@@ -22,7 +26,8 @@
     "expo-media-library": "~15.4.1",
     "expo-permissions": "~14.2.1",
     "expo-status-bar": "~1.6.0",
-    "firebase": "^10.7.1",
+    "expo-updates": "~0.18.19",
+    "firebase": "^10.11.0",
     "react": "18.2.0",
     "react-dom": "^18.2.0",
     "react-native": "0.72.6",

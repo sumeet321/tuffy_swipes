@@ -2,14 +2,13 @@ import React, { useState, useRef, useLayoutEffect, useEffect } from 'react';
 import { View, Text, TouchableOpacity, Button, Image, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
-import { auth } from '../config/firebase';
+import { auth, db, storage } from '../config/firebase';
 import { useNavigation } from '@react-navigation/native';
 import tw from 'tailwind-react-native-classnames';
 import useAuth from '../hooks/useAuth';
 import {AntDesign, Entypo, Ionicons} from "@expo/vector-icons";
 import Swiper from 'react-native-deck-swiper';
 import { doc, onSnapshot, collection, snapshotEqual, setDoc, getDocs, query, where, getDoc, documentSnapshot, serverTimestamp } from '@firebase/firestore';
-import { db } from '../config/firebase';
 import generateId from '../lib/generateId';
 import { CountdownCircleTimer } from 'react-native-countdown-circle-timer';
 

@@ -12,36 +12,63 @@ import {
 import { signOut, updateProfile, getAuth } from 'firebase/auth';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
-import { auth, db} from '../config/firebase';
+import { auth, db, storage} from '../config/firebase';
 import { useNavigation } from '@react-navigation/native';
 import tw from 'tailwind-react-native-classnames';
 import useAuth from '../hooks/useAuth';
 import * as Permissions from 'expo-permissions';
 import { doc, setDoc, serverTimestamp, getFirestore, getDoc } from 'firebase/firestore';
 import {Ionicons, Foundation} from '@expo/vector-icons';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
-export default function ProfilePicture() {
+const calculateAge = (birthday) => {
+  const ageDifMs = Date.now() - birthday.getTime();
+  const ageDate = new Date(ageDifMs); // miliseconds from epoch
+  return Math.abs(ageDate.getUTCFullYear() - 1970);
+};
+
+export default function InformationScreen() {
   const navigation = useNavigation();
   const { user } = useAuth();
   const [image, setImage] = useState(user?.photoURL || null);
-  const [job, setJob] = useState(null);
-  const [age, setAge] = useState(null);
+  const [major, setMajor] = useState(null);
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [gender, setGender] = useState(null);
   const [preferences, setPreferences] = useState(null);
   const auth = getAuth();
   const db = getFirestore(); // Initialize Firestore
-  
+  const storage = getStorage();
+  const storageRef = ref(storage, 'path/to/file');
+  const [birthday, setBirthday] = useState(() => {
+    const eighteenYearsAgo = new Date();
+    eighteenYearsAgo.setFullYear(eighteenYearsAgo.getFullYear() - 18);
+    return eighteenYearsAgo;
+  });
 
+  
   const updateUserProfile = () => {
+    const userAge = calculateAge(birthday);
+    if (userAge < 18) {
+      alert('You must be 18 years old or older to create an account.');
+      return;
+    }
+
+    // Check if email is verified
+    if (!user.emailVerified) {
+      alert('Please verify your email before creating a profile.');
+      return;
+    }
+    
     setDoc(doc(db, 'users', user.uid), {
       id: user.uid,
       firstName: firstName,
       lastName: lastName,
       photoURL: image,
-      job: job,
-      age: age,
+      major: major,
+      birthday: birthday,
+      age: userAge,
       gender: gender,
       preferences: preferences,
       timestamp: serverTimestamp(),
@@ -54,7 +81,6 @@ export default function ProfilePicture() {
       });
   };
 
-
   useEffect(() => {
     if (user) {
       updateProfile(user, { photoURL: image });
@@ -65,8 +91,34 @@ export default function ProfilePicture() {
         setFirstName('');
         setLastName('');
       }
+
+      // Set initial value for birthday
+      const userDocRef = doc(db, 'users', user.uid);
+      getDoc(userDocRef)
+        .then((docSnapshot) => {
+          if (docSnapshot.exists()) {
+            const userData = docSnapshot.data();
+            if (userData) {
+              setBirthday(userData.birthday ? userData.birthday.toDate() : new Date());
+            }
+          }
+        })
+        .catch((error) => {
+          console.error('Error fetching user data:', error);
+        });
     }
-  }, [image, user]);
+  }, [user, image, db]);
+
+  // Function to refresh user data every second
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      if (user) {
+        user.reload();
+      }
+    }, 1000);
+
+    return () => clearInterval(intervalId);
+  }, [user]);
 
   const handleLogout = async () => {
     await signOut(auth);
@@ -75,15 +127,20 @@ export default function ProfilePicture() {
   const pickImage = async () => {
     try {
       const { status } = await Permissions.askAsync(Permissions.MEDIA_LIBRARY);
-
+    
       if (status === 'granted') {
         let result = await ImagePicker.launchImageLibraryAsync({
           mediaTypes: ImagePicker.MediaTypeOptions.Images,
           allowsEditing: true,
         });
-
+    
         if (!result.cancelled) {
-          setImage(result.uri);
+          const response = await fetch(result.uri);
+          const blob = await response.blob();
+          const storageRef = ref(storage, `images/${user.uid}/${result.uri}`);
+          await uploadBytes(storageRef, blob);
+          const downloadURL = await getDownloadURL(storageRef);
+          setImage(downloadURL);
         }
       } else {
         console.error('Camera roll permission not granted');
@@ -104,7 +161,12 @@ export default function ProfilePicture() {
         });
 
         if (!result.cancelled) {
-          setImage(result.uri);
+          const response = await fetch(result.uri);
+          const blob = await response.blob();
+          const storageRef = ref(storage, `images/${user.uid}/${result.uri}`);
+          await uploadBytes(storageRef, blob);
+          const downloadURL = await getDownloadURL(storageRef);
+          setImage(downloadURL);
         }
       } else {
         console.error('Camera permission not granted');
@@ -137,23 +199,29 @@ export default function ProfilePicture() {
                 </TouchableOpacity>
               </View>
 
-              <Text style={tw`text-center p-4 font-bold text-red-400`}>Step 2: Occupation</Text>
+              <Text style={tw`text-center p-4 font-bold text-red-400`}>Step 2: Major</Text>
               <TextInput
-                value={job}
-                onChangeText={(text) => setJob(text)}
+                value={major}
+                onChangeText={(text) => setMajor(text)}
                 style={tw`text-center text-xl pb-2`}
-                placeholder='What do you do for work?'
+                placeholder='What is your major?'
               />
 
-              <Text style={tw`text-center p-4 font-bold text-red-400`}>Step 3: Age</Text>
-              <TextInput
-                value={age}
-                onChangeText={(text) => setAge(text)}
-                style={tw`text-center text-xl pb-2`}
-                placeholder='Enter your age'
-                keyboardType='numeric'
-                maxLength={2}
+              <Text style={tw`text-center p-4 font-bold text-red-400`}>Step 3: Birth Year</Text>
+              <DateTimePicker
+                value={birthday}
+                mode="date"
+                display="spinner"
+                maximumDate={new Date()} // Limit to current date
+                minimumDate={new Date(birthday.getFullYear() - 18, birthday.getMonth(), birthday.getDate())} // Limit to 18 years ago from current date
+                onChange={(event, selectedDate) => {
+                  const currentDate = selectedDate || birthday;
+                  setBirthday(currentDate);
+                }}
               />
+              <Text style={tw`text-center font-bold text-red-400`}>
+                Age: {calculateAge(birthday)}
+              </Text>
 
               <Text style={tw`text-center p-4 font-bold text-red-400`}>Step 4: Gender</Text>
               <View style={tw`flex-row items-center justify-center`}>
@@ -198,11 +266,12 @@ export default function ProfilePicture() {
                 </TouchableOpacity>
               </View>
 
+              <View style={tw`flex-row items-center justify-center`}>
               <TouchableOpacity
                 onPress={updateUserProfile}
                 style={{
-                  width: 200,
-                  padding: 16,
+                  width: 150, // Adjusted width
+                  padding: 12, // Adjusted padding
                   borderRadius: 20,
                   marginTop: 10,
                   marginBottom: 10,
@@ -217,18 +286,19 @@ export default function ProfilePicture() {
               <TouchableOpacity
                 onPress={handleLogout}
                 style={{
-                  width: 200,
-                  padding: 16,
+                  width: 150, // Adjusted width
+                  padding: 12, // Adjusted padding
                   borderRadius: 20,
                   marginTop: 10,
                   marginBottom: 10,
                   backgroundColor: '#FF8001',
                   marginLeft: 'auto',
                   marginRight: 'auto',
-                  top: 75,
+                  top: 10,
                 }}>
                 <Text style={tw`text-center text-white text-xl`}>Logout</Text>
               </TouchableOpacity>
+              </View>
             </>
           ) : (
             <Text>Loading...</Text>

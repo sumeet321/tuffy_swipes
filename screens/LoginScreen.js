@@ -24,6 +24,7 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState(null); // State for error message
+  const [passwordVisible, setPasswordVisible] = useState(false);
 
   const passwordRef = useRef(null);
 
@@ -90,20 +91,26 @@ export default function LoginScreen() {
                 onSubmitEditing={() => passwordRef.current.focus()} // Move to next input
               />
               <Text style={{ color: 'black', marginLeft: 8 }}>Password</Text>
-              <TextInput
-                ref={passwordRef}
-                style={{
-                  padding: 16,
-                  backgroundColor: '#d3d3d3',
-                  color: 'black',
-                  borderRadius: 20,
-                  marginBottom: 14,
-                }}
-                secureTextEntry
-                placeholder="Enter Password"
-                value={password}
-                onChangeText={(value) => setPassword(value)}
-              />
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 14 }}>
+                <TextInput
+                  ref={passwordRef}
+                  style={{
+                    flex: 1,
+                    padding: 16,
+                    backgroundColor: '#d3d3d3',
+                    color: 'black',
+                    borderRadius: 20,
+                    marginBottom: 14,
+                  }}
+                  secureTextEntry={!passwordVisible}
+                  placeholder="Enter Password"
+                  value={password}
+                  onChangeText={(value) => setPassword(value)}
+                />
+                <TouchableOpacity onPress={() => setPasswordVisible(!passwordVisible)} style={{ marginLeft: 8 }}>
+                  <Ionicons name={passwordVisible ? "eye-off" : "eye"} size={24} color="black" />
+                </TouchableOpacity>
+              </View>
               <TouchableOpacity
                 style={{ flexDirection: 'row', justifyContent: 'flex-end' }}
                 onPress={() => navigation.navigate('Forgot')}>

@@ -9,7 +9,6 @@ import StackNavigator from './StackNavigator';
 
 // const Tab = createBottomTabNavigator();
 
-
 export default function App() {
   return (
     <StackNavigator/>

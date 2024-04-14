@@ -13,10 +13,24 @@ import {
 } from 'react-native';
 import { themeColors } from '../theme';
 import { useNavigation } from '@react-navigation/native';
-import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { createUserWithEmailAndPassword, updateProfile, sendEmailVerification, reload } from 'firebase/auth';
 import { auth } from '../config/firebase';
 import { Ionicons } from '@expo/vector-icons';
 import tw from 'tailwind-react-native-classnames';
+
+// Function to send email verification
+const sendVerificationEmail = async (user) => {
+  try {
+    await sendEmailVerification(user);
+    // Show a message to the user indicating that a verification email has been sent
+    Alert.alert('Success', 'A verification email has been sent. Please verify your email address.');
+    await user.reload();
+  } catch (error) {
+    console.log('Error sending email verification:', error.message);
+    // Handle error
+  }
+};
+
 
 export default function SignUpScreen() {
   const navigation = useNavigation();
@@ -25,7 +39,11 @@ export default function SignUpScreen() {
   const [email, setEmail] = useState('');
   const [number, setNumber] = useState('');
   const [password, setPassword] = useState('');
+  const [passwordVisible, setPasswordVisible] = useState(false);
+  const [passwordChecker, setPasswordChecker] = useState('');
+  const [passwordCheckerVisible, setPasswordCheckerVisible] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
+  const [passwordValid, setPasswordValid] = useState(true);
 
   // Create refs for each TextInput
   const lastNameRef = useRef(null);
@@ -33,59 +51,94 @@ export default function SignUpScreen() {
   const emailRef = useRef(null);
   const numberRef = useRef(null);
   const passwordRef = useRef(null);
+  const passwordCheckerRef = useRef(null);
+
+  const validatePassword = (password) => {
+    // Regular expressions for checking if the password has at least one number and one special character
+    const hasNumber = /\d/.test(password);
+    const hasSpecialCharacter = /[^a-zA-Z0-9]/.test(password);
+
+    // Check if the password meets each requirement separately
+    const isNumberValid = hasNumber;
+    const isSpecialCharacterValid = hasSpecialCharacter;
+
+    // Set the password validity based on each individual check
+    const isValid = isNumberValid && isSpecialCharacterValid;
+    setPasswordValid(isValid);
+    return isValid;
+  };
+
 
   const handleSubmit = async () => {
+    /*
+    if (!email.endsWith('@csu.fullerton.edu')) {
+      setErrorMessage('Please use a valid CSUF email address.');
+      return;
+    }
+    */
+  
+    if (password !== passwordChecker) {
+      setErrorMessage('Passwords do not match.');
+      return;
+    }
+  
     if (email && password) {
+      const isPasswordValid = validatePassword(password);
+      if (!isPasswordValid) {
+        setErrorMessage('Password must contain at least one number and one special character.');
+        return;
+      }
+  
       try {
-        // Register the user
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-
+        const user = userCredential.user; // Get the user object from userCredential
+        console.log('User:', user); // Log the user object
+  
         const displayName = `${firstName} ${lastName}`;
-
-        // Update the user's profile with the first name
-        await updateProfile(userCredential.user, { displayName });
-        // If registration is successful, navigate to the 'Home' screen or any other screen
-        navigation.navigate('Info');
+        await updateProfile(user, { displayName });
+  
+        // Send email verification
+        await sendVerificationEmail(user);
+  
+        // Check if the email is verified before navigating
+        if (user.emailVerified) {
+          // Email is verified, navigate to the welcome screen
+          navigation.navigate('Info');
+        } else {
+          // Email is not verified yet
+          setErrorMessage('A verification email has been sent. Please verify your email address.');
+        }
       } catch (err) {
         console.log('Got error:', err.message);
-
-        // Check if the error code is for email already in use
+  
         if (err.code === 'auth/email-already-in-use') {
           setErrorMessage('Email address is already in use. Please use a different email.');
-          Alert.alert('Error', errorMessage || 'Email address is already in use. Please use a different email.');
-        }
-        else if (err.code == 'auth/weak-password') {
+        } else if (err.code === 'auth/weak-password') {
           setErrorMessage('Password should be at least 6 characters.')
-          Alert.alert('Error', errorMessage || 'Password should be at least 6 characters');
-
-        }
-        else {
+        } else {
           setErrorMessage('An error occurred during registration. Please try again.');
-          Alert.alert('Error', errorMessage || err.message);
         }
-
-        // Display an alert with the error message
-        //Alert.alert('Error', errorMessage || 'Email address is already in use. Please use a different email.');
       }
     }
   };
+
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <KeyboardAvoidingView
         style={{ flex: 1, backgroundColor: themeColors.bg }}
-        behavior="padding" // Adjust behavior based on your needs
+        behavior="padding"
         enabled
       >
         <View style={{ flex: 1 }}>
           <SafeAreaView style={{ flex: 1 }}>
-            <View style={{ flexDirection: 'row', justifyContent: 'flex-start' }}>
-              <TouchableOpacity onPress={() => navigation.goBack()} style={tw`p-2`}>
+            <View style={{ flexDirection: 'row', justifyContent: 'flex-start'}}>
+              <TouchableOpacity onPress={() => navigation.navigate('Welcome')} style={tw`p-2`}>
                 <Ionicons name="chevron-back-outline" size={34} color="#FF8001"/>
               </TouchableOpacity>
             </View>
-            <View style={{ flexDirection: 'row', justifyContent: 'center' }}>
-              <Image source={require('../assets/icons/csuf.png')} style={{ width: 200, height: 200 }} />
+            <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: -55 }}>
+              <Image source={require('../assets/icons/csuf.png')} style={{ width: 175, height: 175}} />
             </View>
           </SafeAreaView>
           <View style={{ backgroundColor: 'white', paddingHorizontal: 8, paddingTop: 8, borderTopLeftRadius: 35, borderTopRightRadius: 35 }}>
@@ -97,7 +150,7 @@ export default function SignUpScreen() {
                 value={firstName}
                 onChangeText={(value) => setFirstname(value)}
                 placeholder="Enter First Name"
-                onSubmitEditing={() => lastNameRef.current.focus()} // Move to next input
+                onSubmitEditing={() => lastNameRef.current.focus()}
               />
               <Text style={{ color: 'black', marginLeft: 8 }}>Last Name</Text>
               <TextInput
@@ -106,7 +159,7 @@ export default function SignUpScreen() {
                 value={lastName}
                 onChangeText={(value) => setLastname(value)}
                 placeholder="Enter Last Name"
-                onSubmitEditing={() => emailRef.current.focus()} // Move to next input
+                onSubmitEditing={() => emailRef.current.focus()}
               />
               <Text style={{ color: 'black', marginLeft: 8 }}>Email Address</Text>
               <TextInput
@@ -116,8 +169,8 @@ export default function SignUpScreen() {
                 autoCapitalize="none"
                 autoCorrect={false}
                 onChangeText={(value) => setEmail(value)}
-                placeholder="Enter Email"
-                onSubmitEditing={() => numberRef.current.focus()} // Move to next input
+                placeholder="email@csu.fullerton.edu"
+                onSubmitEditing={() => numberRef.current.focus()}
               />
               <Text style={{ color: 'black', marginLeft: 8 }}>Phone Number</Text>
               <TextInput
@@ -128,17 +181,39 @@ export default function SignUpScreen() {
                 keyboardType="numeric"
                 placeholder="Enter Phone Number"
                 maxLength={10}
-                onSubmitEditing={() => passwordRef.current.focus()} // Move to next input
+                onSubmitEditing={() => passwordRef.current.focus()}
               />
               <Text style={{ color: 'black', marginLeft: 8 }}>Password</Text>
-              <TextInput
-                ref={passwordRef}
-                style={{ padding: 16, backgroundColor: '#d3d3d3', color: 'black', borderRadius: 20, marginBottom: 14 }}
-                secureTextEntry
-                value={password}
-                onChangeText={(value) => setPassword(value)}
-                placeholder="Enter Password"
-              />
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+                <TextInput
+                  ref={passwordRef}
+                  style={{ flex: 1, padding: 16, backgroundColor: '#d3d3d3', color: 'black', borderRadius: 20, marginBottom: 8 }}
+                  secureTextEntry={!passwordVisible}
+                  value={password}
+                  onChangeText={(value) => setPassword(value)}
+                  placeholder="Enter Password"
+                  onSubmitEditing={() => passwordCheckerRef.current.focus()}
+                />
+                <TouchableOpacity onPress={() => setPasswordVisible(!passwordVisible)} style={{ marginLeft: 8 }}>
+                  <Ionicons name={passwordVisible ? "eye-off" : "eye"} size={24} color="black" />
+                </TouchableOpacity>
+              </View>
+              <Text style={{ color: 'black', marginLeft: 8 }}>Confirm Password</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+                <TextInput
+                  ref={passwordCheckerRef}
+                  style={{ flex: 1, padding: 16, backgroundColor: '#d3d3d3', color: 'black', borderRadius: 20, marginBottom: 14 }}
+                  secureTextEntry={!passwordCheckerVisible}
+                  value={passwordChecker}
+                  onChangeText={(value) => setPasswordChecker(value)}
+                  placeholder="Confirm Password"
+                  onSubmitEditing={handleSubmit}
+                />
+                <TouchableOpacity onPress={() => setPasswordCheckerVisible(!passwordCheckerVisible)} style={{ marginLeft: 8 }}>
+                  <Ionicons name={passwordCheckerVisible ? "eye-off" : "eye"} size={24} color="black" />
+                </TouchableOpacity>
+              </View>
+              {!passwordValid}
               {errorMessage && (
                 <Text style={{ color: 'red', textAlign: 'center', marginTop: 10 }}>
                   {errorMessage}
@@ -146,7 +221,8 @@ export default function SignUpScreen() {
               )}
               <TouchableOpacity
                 style={{ padding: 24, backgroundColor: '#FF8001', borderRadius: 20, marginBottom: 8 }}
-                onPress={handleSubmit}>
+                onPress={handleSubmit}
+              >
                 <Text style={{ fontSize: 20, fontWeight: 'bold', textAlign: 'center', color: 'white' }}>
                   Sign Up
                 </Text>
