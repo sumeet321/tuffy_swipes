@@ -37,7 +37,6 @@ export default function SignUpScreen() {
   const [firstName, setFirstname] = useState('');
   const [lastName, setLastname] = useState('');
   const [email, setEmail] = useState('');
-  const [number, setNumber] = useState('');
   const [password, setPassword] = useState('');
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [passwordChecker, setPasswordChecker] = useState('');
@@ -49,7 +48,6 @@ export default function SignUpScreen() {
   const lastNameRef = useRef(null);
   const firstNameRef = useRef(null);
   const emailRef = useRef(null);
-  const numberRef = useRef(null);
   const passwordRef = useRef(null);
   const passwordCheckerRef = useRef(null);
 
@@ -137,7 +135,7 @@ export default function SignUpScreen() {
                 <Ionicons name="chevron-back-outline" size={34} color="#FF8001"/>
               </TouchableOpacity>
             </View>
-            <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: -55 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: -25 }}>
               <Image source={require('../assets/icons/csuf.png')} style={{ width: 175, height: 175}} />
             </View>
           </SafeAreaView>
@@ -170,17 +168,6 @@ export default function SignUpScreen() {
                 autoCorrect={false}
                 onChangeText={(value) => setEmail(value)}
                 placeholder="email@csu.fullerton.edu"
-                onSubmitEditing={() => numberRef.current.focus()}
-              />
-              <Text style={{ color: 'black', marginLeft: 8 }}>Phone Number</Text>
-              <TextInput
-                ref={numberRef}
-                style={{ padding: 16, backgroundColor: '#d3d3d3', color: 'black', borderRadius: 20, marginBottom: 8 }}
-                value={number}
-                onChangeText={(value) => setNumber(value)}
-                keyboardType="numeric"
-                placeholder="Enter Phone Number"
-                maxLength={10}
                 onSubmitEditing={() => passwordRef.current.focus()}
               />
               <Text style={{ color: 'black', marginLeft: 8 }}>Password</Text>

@@ -65,6 +65,7 @@ export default function InformationScreen() {
       id: user.uid,
       firstName: firstName,
       lastName: lastName,
+      email: user.email,
       photoURL: image,
       major: major,
       birthday: birthday,

@@ -49,8 +49,8 @@ export default function LoginScreen() {
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <KeyboardAvoidingView
-        style={{ flex: 1, backgroundColor: themeColors.bg }}
-        behavior="padding" // Adjust behavior based on your needs
+        style={{ flex: 1, backgroundColor: themeColors.bg}}
+        behavior='padding' // Adjust behavior based on your needs
         enabled
       >
         <View style={{ flex: 1 }}>

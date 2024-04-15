@@ -9,16 +9,16 @@ export default function WelcomeScreen() {
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: themeColors.bg }}>
             <View style={{ flex: 1, justifyContent: 'around', marginVertical: 4 }}>
-                <Text style={{ color: '#FF8001', fontWeight: 'bold', fontSize: 35, textAlign: 'center' }}>
+                <Text style={{ color: '#FF8001', fontWeight: 'bold', fontSize: 40, textAlign: 'center', fontFamily: 'Georgia', top: 5}}>
                     Tuffy Swipes
                 </Text>
                 <View style={{ flexDirection: 'row', justifyContent: 'center' }}>
                     <Image
                         source={require('../assets/icons/tuffy.png')}
-                        style={{width: 350, height: 500, top: 20}}
+                        style={{width: 350, height: 500, top: 40}}
                     />
                 </View>
-                <View style={{ marginVertical: 50 }}>
+                <View style={{ marginVertical: 75 }}>
                     <TouchableOpacity
                         onPress={() => navigation.navigate('SignUp')}
                         style={{ paddingVertical: 12, backgroundColor: '#FF8001', marginHorizontal: 7, borderRadius: 8 }}

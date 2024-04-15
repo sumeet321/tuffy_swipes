@@ -80,7 +80,7 @@ export default function ProfilePicture() {
         setLastName('');
       }
 
-      // Set initial values for major, age, gender, and preferences
+      // Set initial values for major, age, and preferences
       const userDocRef = doc(db, 'users', user.uid);
       getDoc(userDocRef)
         .then((docSnapshot) => {
@@ -240,12 +240,12 @@ export default function ProfilePicture() {
                 </TouchableOpacity>
               </View>
 
-              <Text style={tw`text-center p-4 font-bold text-red-400`}>Occupation</Text>
+              <Text style={tw`text-center p-4 font-bold text-red-400`}>Major</Text>
               <TextInput
                 value={major}
                 onChangeText={(text) => setMajor(text)}
                 style={tw`text-center text-xl pb-2`}
-                placeholder='What do you do for work?'
+                placeholder='What do you major in?'
               />
 
               <Text style={tw`text-center p-4 font-bold text-red-400`}>Age</Text>
@@ -257,24 +257,6 @@ export default function ProfilePicture() {
                 keyboardType='numeric'
                 maxLength={2}
               />
-
-              <Text style={tw`text-center p-4 font-bold text-red-400`}>Gender</Text>
-              <View style={tw`flex-row items-center justify-center`}>
-                <TouchableOpacity
-                  onPress={() => setGender('male')}
-                  style={tw`p-2 bg-blue-500 rounded-md mx-2 ${
-                    gender === 'male' ? 'bg-opacity-70' : 'bg-opacity-20'
-                  }`}>
-                  <Text style={tw`text-white`}>Male</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => setGender('female')}
-                  style={tw`p-2 bg-pink-500 rounded-md mx-2 ${
-                    gender === 'female' ? 'bg-opacity-70' : 'bg-opacity-20'
-                  }`}>
-                  <Text style={tw`text-white`}>Female</Text>
-                </TouchableOpacity>
-              </View>
 
               <Text style={tw`text-center p-4 font-bold text-red-400`}>Preferences</Text>
               <View style={tw`flex-row items-center justify-center`}>
