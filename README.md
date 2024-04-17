@@ -4,10 +4,10 @@ Tuffy Swipes is an innovative mobile application designed exclusively for Califo
 
 # Features
 
-## Swipeable Cards: Users can view profiles of other CSUF students and swipe left or right based on their interests.
-## CSUF Authentication: Secure registration and login using CSUF credentials ensure the authenticity and exclusivity of the platform.
-## Exclusive Matching Algorithm: The app employs a CSUF-exclusive matching algorithm to suggest potential matches based on campus-specific preferences.
-## Real-time Chat Messaging: Matched users can engage in real-time chat conversations, promoting meaningful interactions and relationship building.
+- **Swipeable Cards:** Users can view profiles of other CSUF students and swipe left or right based on their interests.
+- **CSUF Authentication:** Secure registration and login using CSUF credentials ensure the authenticity and exclusivity of the platform.
+- **Exclusive Matching Algorithm:** The app employs a CSUF-exclusive matching algorithm to suggest potential matches based on campus-specific preferences.
+- **Real-time Chat Messaging:** Matched users can engage in real-time chat conversations, promoting meaningful interactions and relationship building.
 
 # Installation
 
