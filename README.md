@@ -5,16 +5,17 @@ Tuffy Swipes is an innovative mobile application designed exclusively for Califo
 # Features
 
 - **Swipeable Cards:** Users can view profiles of other CSUF students and swipe left or right based on their interests.
-- **CSUF Authentication:** Secure registration and login using CSUF credentials ensure the authenticity and exclusivity of the platform.
+- **CSUF Authentication:** Secure registration and login using CSUF credentials to ensure the authenticity and exclusivity of the platform.
 - **Exclusive Matching Algorithm:** The app employs a CSUF-exclusive matching algorithm to suggest potential matches based on campus-specific preferences.
 - **Real-time Chat Messaging:** Matched users can engage in real-time chat conversations, promoting meaningful interactions and relationship building.
 
 # Installation
 
 To run the Tuffy Swipes app on your device, follow these steps:
-1. Download the Expo Go application on your mobile device (Do not need to create account)
+1. Download the Expo Go application on your mobile device (Do not need to create an account)
 2. Open Expo Go App
 3. Scan the QR code using the Camera app or click on the 'Tuffy Swipes' deployment link.
+<img width="480" alt="Screenshot 2024-04-16 at 9 11 30 PM" src="https://github.com/sumeet321/tuffy_swipes/assets/69872102/e635ae4b-20f5-4057-b527-bed913fc8fe6">
 4. Tuffy Swipes will launch successfully
    
 # Created by:   
