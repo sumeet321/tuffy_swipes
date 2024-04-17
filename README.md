@@ -16,6 +16,7 @@ To run the Tuffy Swipes app on your device, follow these steps:
 2. Open Expo Go App
 3. Scan the QR code using the Camera app or click on the 'Tuffy Swipes' deployment link.
 <img width="480" alt="Screenshot 2024-04-16 at 9 11 30 PM" src="https://github.com/sumeet321/tuffy_swipes/assets/69872102/e635ae4b-20f5-4057-b527-bed913fc8fe6">
+
 4. Tuffy Swipes will launch successfully
    
 # Created by:   
