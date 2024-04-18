@@ -19,38 +19,35 @@ const Stack = createNativeStackNavigator();
 
 
 export default function StackNavigator() {
-  const {user} = useAuth();
-  if(user)
-  {
-    return(
-    <NavigationContainer>
-      <Stack.Navigator 
-        screenOptions={{
-          headerShown: false,
-        }}
-        initialRouteName='Home'>
-        <Stack.Screen name="Info" options={{headerShown: false}} component={InformationScreen}/>
-        <Stack.Screen name="Home" options={{headerShown: false}} component={HomeScreen}/>
-        <Stack.Screen name="Picture" options={{headerShown: false}} component={ProfilePicture}/>
-        <Stack.Screen name="Chat" options={{headerShown: false}} component={ChatScreen}/>
-        <Stack.Screen name="Messages" options={{headerShown: false}} component={MessagesScreen}/>
-        <Stack.Screen name="Match" screenOptions={{presentation: "transparentModal"}} options={{headerShown: false}} component={MatchScreen}/>
-      </Stack.Navigator>
-    </NavigationContainer>
+  const { user } = useAuth();
+  if (user) {
+    return (
+      <NavigationContainer>
+        <Stack.Navigator
+          screenOptions={{
+            headerShown: false,
+          }}
+          initialRouteName='Home'
+        >
+          <Stack.Screen name="Info" options={{ headerShown: false }} component={InformationScreen} />
+          <Stack.Screen name="Home" options={{ headerShown: false, gestureEnabled: false }} component={HomeScreen} />
+          <Stack.Screen name="Picture" options={{ headerShown: false }} component={ProfilePicture} />
+          <Stack.Screen name="Chat" options={{ headerShown: false }} component={ChatScreen} />
+          <Stack.Screen name="Messages" options={{ headerShown: false }} component={MessagesScreen} />
+          <Stack.Screen name="Match" screenOptions={{ presentation: "transparentModal" }} options={{ headerShown: false }} component={MatchScreen} />
+        </Stack.Navigator>
+      </NavigationContainer>
     )
-  }
-  else
-  {
+  } else {
     return (
       <NavigationContainer>
         <Stack.Navigator initialRouteName='Welcome'>
-          <Stack.Screen name="Welcome" options={{headerShown: false}} component={WelcomeScreen} />
-          <Stack.Screen name="Login" options={{headerShown: false}} component={LoginScreen} />
-          <Stack.Screen name="SignUp" options={{headerShown: false}} component={SignUpScreen} />
-          <Stack.Screen name="Forgot" options={{headerShown: false}} component={ForgotScreen} />
+          <Stack.Screen name="Welcome" options={{ headerShown: false }} component={WelcomeScreen} />
+          <Stack.Screen name="Login" options={{ headerShown: false }} component={LoginScreen} />
+          <Stack.Screen name="SignUp" options={{ headerShown: false }} component={SignUpScreen} />
+          <Stack.Screen name="Forgot" options={{ headerShown: false }} component={ForgotScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     )
   }
-  
 }

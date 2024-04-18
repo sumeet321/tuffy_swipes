@@ -54,20 +54,23 @@ export default function InformationScreen() {
       alert('You must be 18 years old or older to create an account.');
       return;
     }
-
+  
     // Check if email is verified
     if (!user.emailVerified) {
       alert('Please verify your email before creating a profile.');
       return;
     }
     
+    // Trim trailing blank spaces from major
+    const trimmedMajor = major ? major.trim() : null;
+  
     setDoc(doc(db, 'users', user.uid), {
       id: user.uid,
       firstName: firstName,
       lastName: lastName,
       email: user.email,
       photoURL: image,
-      major: major,
+      major: trimmedMajor,
       birthday: birthday,
       age: userAge,
       gender: gender,
@@ -81,6 +84,7 @@ export default function InformationScreen() {
         alert(error.message);
       });
   };
+  
 
   useEffect(() => {
     if (user) {

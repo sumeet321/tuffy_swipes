@@ -87,7 +87,7 @@ export default function LoginScreen() {
                 value={email}
                 autoCapitalize="none"
                 autoCorrect={false}
-                onChangeText={(value) => setEmail(value)}
+                onChangeText={(value) => setEmail(value.trim())}
                 onSubmitEditing={() => passwordRef.current.focus()} // Move to next input
               />
               <Text style={{ color: 'black', marginLeft: 8 }}>Password</Text>
@@ -105,7 +105,7 @@ export default function LoginScreen() {
                   secureTextEntry={!passwordVisible}
                   placeholder="Enter Password"
                   value={password}
-                  onChangeText={(value) => setPassword(value)}
+                  onChangeText={(value) => setPassword(value.trim())}
                 />
                 <TouchableOpacity onPress={() => setPasswordVisible(!passwordVisible)} style={{ marginLeft: 8 }}>
                   <Ionicons name={passwordVisible ? "eye-off" : "eye"} size={24} color="black" />

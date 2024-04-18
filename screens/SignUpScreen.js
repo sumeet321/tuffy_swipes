@@ -146,7 +146,7 @@ export default function SignUpScreen() {
                 ref={firstNameRef}
                 style={{ padding: 16, backgroundColor: '#d3d3d3', color: 'black', borderRadius: 20, marginBottom: 8 }}
                 value={firstName}
-                onChangeText={(value) => setFirstname(value)}
+                onChangeText={(value) => setFirstname(value.trim())}
                 placeholder="Enter First Name"
                 onSubmitEditing={() => lastNameRef.current.focus()}
               />
@@ -155,7 +155,7 @@ export default function SignUpScreen() {
                 ref={lastNameRef}
                 style={{ padding: 16, backgroundColor: '#d3d3d3', color: 'black', borderRadius: 20, marginBottom: 8 }}
                 value={lastName}
-                onChangeText={(value) => setLastname(value)}
+                onChangeText={(value) => setLastname(value.trim())}
                 placeholder="Enter Last Name"
                 onSubmitEditing={() => emailRef.current.focus()}
               />
@@ -166,7 +166,7 @@ export default function SignUpScreen() {
                 value={email}
                 autoCapitalize="none"
                 autoCorrect={false}
-                onChangeText={(value) => setEmail(value)}
+                onChangeText={(value) => setEmail(value.trim())}
                 placeholder="email@csu.fullerton.edu"
                 onSubmitEditing={() => passwordRef.current.focus()}
               />
@@ -177,7 +177,7 @@ export default function SignUpScreen() {
                   style={{ flex: 1, padding: 16, backgroundColor: '#d3d3d3', color: 'black', borderRadius: 20, marginBottom: 8 }}
                   secureTextEntry={!passwordVisible}
                   value={password}
-                  onChangeText={(value) => setPassword(value)}
+                  onChangeText={(value) => setPassword(value.trim())}
                   placeholder="Enter Password"
                   onSubmitEditing={() => passwordCheckerRef.current.focus()}
                 />
@@ -192,7 +192,7 @@ export default function SignUpScreen() {
                   style={{ flex: 1, padding: 16, backgroundColor: '#d3d3d3', color: 'black', borderRadius: 20, marginBottom: 14 }}
                   secureTextEntry={!passwordCheckerVisible}
                   value={passwordChecker}
-                  onChangeText={(value) => setPasswordChecker(value)}
+                  onChangeText={(value) => setPasswordChecker(value.trim())}
                   placeholder="Confirm Password"
                   onSubmitEditing={handleSubmit}
                 />

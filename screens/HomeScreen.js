@@ -68,13 +68,24 @@ export default function HomeScreen() {
   };
 
   // useEffect hook to fetch cards initially
+  // useEffect hook to fetch cards initially and start a timer for periodic updates
   useEffect(() => {
     let unsub;
     if (user && user.uid) {
-      fetchCards();
+      fetchCards(); // Fetch cards initially
+
+      // Start a timer to fetch cards periodically (every 1 minute)
+      const intervalId = setInterval(() => {
+        fetchCards(); // Fetch cards periodically
+      }, 20 * 1000); // 1 minute interval
+
+      // Cleanup function to clear the interval when the component unmounts
+      return () => {
+        clearInterval(intervalId);
+      };
     }
-    return unsub;
-  }, [user, db]);
+  }, [user]);
+
 
   // useFocusEffect hook to refetch cards when screen comes into focus
   useFocusEffect(
@@ -270,35 +281,29 @@ export default function HomeScreen() {
             ]}
           >
           <Text style={tw`font-bold pb-5`}>No more profiles. Check back later.</Text>
-
-          <Image
-            style={tw`h-20 w-full`}
-            height = {100}
-            width = {100}
-            //source = {{uri: ""}}
-          />
         </View>
         )}
       />
-      
     </View>
     
     
     {/*Countdown*/}
+    {/*
     <View style={{flex:0.001 ,justifyContent: 'center', alignItems: 'center', backgroundColor: '#ecf0f1'}}>
-      <CountdownCircleTimer
-        key={countdownKey}
-        size={150}
-        isPlaying={isPlaying}
-        duration={10}
-        colors={["#004777", "#F7B801", "#A30000", "#A30000"]}
-        colorsTime={[10, 6, 3, 0]}
-        onComplete={() => {
-          setCountdownFinished(true);
-          setIsPlaying(false);
-          return { shouldRepeat: true, duration: .1};
-        }}
-        updateInterval={1}
+    {profiles.length > 0 && (
+    <CountdownCircleTimer
+      key={countdownKey}
+      size={150}
+      isPlaying={isPlaying}
+      duration={10}
+      colors={["#004777", "#F7B801", "#A30000", "#A30000"]}
+      colorsTime={[10, 6, 3, 0]}
+      onComplete={() => {
+        setCountdownFinished(true);
+        setIsPlaying(false);
+        return { shouldRepeat: true, duration: .1};
+      }}
+      updateInterval={1}
     >
       {({ remainingTime, color }) => (
         <Text style={{ color, fontSize: 40 }}>
@@ -306,8 +311,9 @@ export default function HomeScreen() {
         </Text>
       )}
     </CountdownCircleTimer>
-  </View>
-
+  )}
+</View>
+*/}
 
       <View style={tw`flex flex-row justify-between`}>
         <TouchableOpacity onPress={() => swipeRef.current.swipeLeft()}

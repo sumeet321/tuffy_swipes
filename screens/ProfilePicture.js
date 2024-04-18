@@ -10,11 +10,13 @@ import {
   Keyboard,
   Modal,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { signOut, updateProfile, getAuth, deleteUser, reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
-import { auth, db } from '../config/firebase';
+import { auth } from '../config/firebase';
+import { db } from '../config/firebase';
 import { useNavigation } from '@react-navigation/native';
 import tw from 'tailwind-react-native-classnames';
 import useAuth from '../hooks/useAuth';
@@ -25,7 +27,14 @@ import {
   serverTimestamp,
   getFirestore,
   getDoc,
+  getDocs,
   deleteDoc,
+  updateDoc,
+  arrayRemove,
+  deleteField,
+  query,
+  collection,
+  where
 } from 'firebase/firestore';
 import { Ionicons } from '@expo/vector-icons';
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
@@ -42,32 +51,66 @@ export default function ProfilePicture() {
   const [preferences, setPreferences] = useState(null);
   const [passwordModalVisible, setPasswordModalVisible] = useState(false);
   const [passwordInput, setPasswordInput] = useState('');
+  const [modalVisible, setModalVisible] = useState(false); // state for modal visibility
+  const [loading, setLoading] = useState(false); // State to track loading status
   const auth = getAuth();
   const db = getFirestore(); // Initialize Firestore
   const storage = getStorage();
   const storageRef = ref(storage, 'path/to/file');
 
-  const updateUserProfile = () => {
+  const updateUserProfile = async () => {
     const userDocRef = doc(db, 'users', user.uid);
-
-    setDoc(userDocRef, {
-      id: user.uid,
-      firstName: firstName,
-      lastName: lastName,
-      photoURL: image,
-      major: major,
-      age: age,
-      gender: gender,
-      preferences: preferences,
-      timestamp: serverTimestamp(),
-    })
-      .then(() => {
-        navigation.navigate('Home');
-      })
-      .catch((error) => {
-        alert(error.message);
+  
+    // Trim trailing blank spaces from major
+    const trimmedMajor = major ? major.trim() : null;
+  
+    // Update or create user document
+    try {
+      await setDoc(userDocRef, {
+        id: user.uid,
+        firstName: firstName,
+        lastName: lastName,
+        photoURL: image,
+        major: trimmedMajor, // Use trimmedMajor instead of major
+        age: age,
+        gender: gender,
+        preferences: preferences,
+        timestamp: serverTimestamp(),
       });
+  
+      // Update matches where the user is involved
+      const matchesQuerySnapshot = await getDocs(
+        query(collection(db, 'matches'), where('usersMatched', 'array-contains', user.uid))
+      );
+  
+      matchesQuerySnapshot.forEach(async (matchDoc) => {
+        const matchData = matchDoc.data();
+        const updatedMatchData = {
+          ...matchData,
+          users: {
+            ...matchData.users,
+            [user.uid]: {
+              firstName: firstName,
+              lastName: lastName,
+              photoURL: image,
+              major: trimmedMajor, // Use trimmedMajor instead of major
+              age: age,
+              gender: gender,
+              preferences: preferences,
+            }
+          }
+        };
+  
+        await setDoc(doc(db, 'matches', matchDoc.id), updatedMatchData);
+      });
+  
+      navigation.navigate('Home');
+    } catch (error) {
+      alert(error.message);
+    }
   };
+  
+  
 
   useEffect(() => {
     if (user) {
@@ -119,12 +162,14 @@ export default function ProfilePicture() {
         });
     
         if (!result.cancelled) {
+          setLoading(true); // Set loading state to true while image is being uploaded
           const response = await fetch(result.uri);
           const blob = await response.blob();
           const storageRef = ref(storage, `images/${user.uid}/${result.uri}`);
           await uploadBytes(storageRef, blob);
           const downloadURL = await getDownloadURL(storageRef);
           setImage(downloadURL);
+          setLoading(false); // Set loading state to false after image has been uploaded
         }
       } else {
         console.error('Camera roll permission not granted');
@@ -145,12 +190,14 @@ export default function ProfilePicture() {
         });
 
         if (!result.cancelled) {
+          setLoading(true); // Set loading state to true while image is being uploaded
           const response = await fetch(result.uri);
           const blob = await response.blob();
           const storageRef = ref(storage, `images/${user.uid}/${result.uri}`);
           await uploadBytes(storageRef, blob);
           const downloadURL = await getDownloadURL(storageRef);
           setImage(downloadURL);
+          setLoading(false); // Set loading state to false after image has been uploaded
         }
       } else {
         console.error('Camera permission not granted');
@@ -201,8 +248,41 @@ export default function ProfilePicture() {
       const userCredential = await reauthenticateUser();
       if (userCredential) {
         const userDocRef = doc(db, 'users', user.uid);
+  
+        // Get all matches where the user is involved
+        const matchesQuerySnapshot = await getDocs(
+          query(collection(db, 'matches'), where('usersMatched', 'array-contains', user.uid))
+        );
+  
+        // Initialize array to store promises for batched updates
+        const batchUpdates = [];
+  
+        // Iterate through each match
+        matchesQuerySnapshot.forEach((matchDoc) => {
+          const matchRef = doc(db, 'matches', matchDoc.id);
+          const matchData = matchDoc.data();
+  
+          // If there are only two users in the match, delete the entire match
+          if (Object.keys(matchData.users).length === 2) {
+            batchUpdates.push(deleteDoc(matchRef));
+          } else {
+            // Otherwise, remove the user from the match
+            batchUpdates.push(updateDoc(matchRef, {
+              usersMatched: arrayRemove(user.uid),
+              [`users.${user.uid}`]: deleteField()
+            }));
+          }
+        });
+  
+        // Execute all batched updates concurrently
+        await Promise.all(batchUpdates);
+  
+        // Delete the user's document
         await deleteDoc(userDocRef);
+  
+        // Delete the user
         await deleteUser(userCredential);
+  
         navigation.navigate('Login');
       } else {
         throw new Error('User authentication failed');
@@ -212,6 +292,9 @@ export default function ProfilePicture() {
       Alert.alert('Failed to delete profile.');
     }
   };
+  
+  
+  
 
   return (
     <SafeAreaView style={tw`flex-1`}>
@@ -229,6 +312,35 @@ export default function ProfilePicture() {
               <Text style={tw`text-center p-4 font-bold text-red-400`}>
                 The Profile Picture
               </Text>
+              <TouchableOpacity onPress={() => setModalVisible(true)}>
+                <View style={tw`flex items-center`}>
+                  {loading ? (
+                    <ActivityIndicator size="large" color="#FF8001" />
+                  ) : (
+                    <Image
+                      source={{ uri: image }}
+                      style={{ width: 125, height: 125, borderRadius: 100, marginVertical: 7 }}
+                    />
+                  )}
+                </View>
+              </TouchableOpacity>
+
+              <Modal
+                animationType="slide"
+                transparent={true}
+                visible={modalVisible}
+                onRequestClose={() => setModalVisible(false)}
+              >
+                <View style={tw`flex-1 justify-center items-center bg-black bg-opacity-70`}>
+                  <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
+                    <Image
+                      source={{ uri: image }}
+                      style={{ width: '100%', height: '100%', resizeMode: 'contain' }}
+                    />
+                  </TouchableWithoutFeedback>
+                </View>
+              </Modal>
+
               <View style={tw`items-center`}>
                 <TouchableOpacity>
                   <Button title='Choose Picture' onPress={pickImage} />
@@ -249,14 +361,8 @@ export default function ProfilePicture() {
               />
 
               <Text style={tw`text-center p-4 font-bold text-red-400`}>Age</Text>
-              <TextInput
-                value={age ? age.toString() : ''} // Convert age to string and provide a default empty string if age is null
-                onChangeText={(text) => setAge(text)}
-                style={tw`text-center text-xl pb-2`}
-                placeholder='Enter your age'
-                keyboardType='numeric'
-                maxLength={2}
-              />
+              <Text style={tw`text-center text-xl pb-2`}>{age}</Text>
+
 
               <Text style={tw`text-center p-4 font-bold text-red-400`}>Preferences</Text>
               <View style={tw`flex-row items-center justify-center`}>
@@ -283,7 +389,7 @@ export default function ProfilePicture() {
                 </TouchableOpacity>
               </View>
 
-              <View style={tw`flex-row justify-between p-4 top-20`}>
+              <View style={tw`flex-row justify-between p-4 top-14`}>
                 <TouchableOpacity
                   onPress={updateUserProfile}
                   style={{
@@ -338,21 +444,21 @@ export default function ProfilePicture() {
                   onChangeText={(text) => setPasswordInput(text)}
                 />
                 <TouchableOpacity
-                style={tw`bg-red-500 rounded-md p-2 mt-4`}
-                onPress={() => setPasswordModalVisible(false)}
-              >
-                <Text style={tw`text-white text-center font-bold`}>Cancel</Text>
-              </TouchableOpacity>
+                  style={tw`bg-red-500 rounded-md p-2 mt-4`}
+                  onPress={() => setPasswordModalVisible(false)}
+                >
+                  <Text style={tw`text-white text-center font-bold`}>Cancel</Text>
+                </TouchableOpacity>
 
-              <TouchableOpacity
-                style={tw`bg-blue-500 rounded-md p-2 mt-4`}
-                onPress={() => {
-                  setPasswordModalVisible(false);
-                  confirmDeleteProfile();
-                }}
-              >
-                <Text style={tw`text-white text-center font-bold`}>Delete Profile</Text>
-              </TouchableOpacity>
+                <TouchableOpacity
+                  style={tw`bg-blue-500 rounded-md p-2 mt-4`}
+                  onPress={() => {
+                    setPasswordModalVisible(false);
+                    confirmDeleteProfile();
+                  }}
+                >
+                  <Text style={tw`text-white text-center font-bold`}>Delete Profile</Text>
+                </TouchableOpacity>
               </View>
             </View>
           </Modal>
