@@ -67,7 +67,6 @@ export default function HomeScreen() {
     }
   };
 
-  // useEffect hook to fetch cards initially
   // useEffect hook to fetch cards initially and start a timer for periodic updates
   useEffect(() => {
     let unsub;
@@ -77,7 +76,8 @@ export default function HomeScreen() {
       // Start a timer to fetch cards periodically (every 1 minute)
       const intervalId = setInterval(() => {
         fetchCards(); // Fetch cards periodically
-      }, 20 * 1000); // 1 minute interval
+      }, 20 * 1000); // 20 second interval
+      console.log("Fetched profiles: ", profiles);
 
       // Cleanup function to clear the interval when the component unmounts
       return () => {
@@ -172,7 +172,7 @@ export default function HomeScreen() {
       }
       else
       {
-        console.log(`You SWIPED on ${userSwiped.firstName} (${userSwiped.job})`);
+        console.log(`You SWIPED on ${userSwiped.firstName} (${userSwiped.major})`);
 
       setDoc(
         doc(db, "users", user.uid, "swipes", userSwiped.id),
@@ -268,7 +268,7 @@ export default function HomeScreen() {
                 <Text style={tw`text-xl font-bold`}>
                   {card.firstName} {card.lastName}
                 </Text>
-                <Text>{card.job}</Text>
+                <Text>{card.major}</Text>
               </View>
               <Text style={tw`text-2xl font-bold`}>{card.age}</Text>
             </View>

@@ -10,6 +10,7 @@ import {
   TouchableWithoutFeedback,
   KeyboardAvoidingView,
   Alert,
+  ScrollView, // Import ScrollView for scrolling content
 } from 'react-native';
 import { themeColors } from '../theme';
 import { useNavigation } from '@react-navigation/native';
@@ -128,101 +129,103 @@ export default function SignUpScreen() {
         behavior="padding"
         enabled
       >
-        <View style={{ flex: 1 }}>
-          <SafeAreaView style={{ flex: 1 }}>
-            <View style={{ flexDirection: 'row', justifyContent: 'flex-start'}}>
-              <TouchableOpacity onPress={() => navigation.navigate('Welcome')} style={tw`p-2`}>
-                <Ionicons name="chevron-back-outline" size={34} color="#FF8001"/>
-              </TouchableOpacity>
-            </View>
-            <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: -25 }}>
-              <Image source={require('../assets/icons/csuf.png')} style={{ width: 175, height: 175}} />
-            </View>
-          </SafeAreaView>
-          <View style={{ backgroundColor: 'white', paddingHorizontal: 8, paddingTop: 8, borderTopLeftRadius: 35, borderTopRightRadius: 35 }}>
-            <View style={{ marginBottom: 8 }}>
-              <Text style={{ color: 'black', marginLeft: 8 }}>First Name</Text>
-              <TextInput
-                ref={firstNameRef}
-                style={{ padding: 16, backgroundColor: '#d3d3d3', color: 'black', borderRadius: 20, marginBottom: 8 }}
-                value={firstName}
-                onChangeText={(value) => setFirstname(value.trim())}
-                placeholder="Enter First Name"
-                onSubmitEditing={() => lastNameRef.current.focus()}
-              />
-              <Text style={{ color: 'black', marginLeft: 8 }}>Last Name</Text>
-              <TextInput
-                ref={lastNameRef}
-                style={{ padding: 16, backgroundColor: '#d3d3d3', color: 'black', borderRadius: 20, marginBottom: 8 }}
-                value={lastName}
-                onChangeText={(value) => setLastname(value.trim())}
-                placeholder="Enter Last Name"
-                onSubmitEditing={() => emailRef.current.focus()}
-              />
-              <Text style={{ color: 'black', marginLeft: 8 }}>Email Address</Text>
-              <TextInput
-                ref={emailRef}
-                style={{ padding: 16, backgroundColor: '#d3d3d3', color: 'black', borderRadius: 20, marginBottom: 8 }}
-                value={email}
-                autoCapitalize="none"
-                autoCorrect={false}
-                onChangeText={(value) => setEmail(value.trim())}
-                placeholder="email@csu.fullerton.edu"
-                onSubmitEditing={() => passwordRef.current.focus()}
-              />
-              <Text style={{ color: 'black', marginLeft: 8 }}>Password</Text>
-              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-                <TextInput
-                  ref={passwordRef}
-                  style={{ flex: 1, padding: 16, backgroundColor: '#d3d3d3', color: 'black', borderRadius: 20, marginBottom: 8 }}
-                  secureTextEntry={!passwordVisible}
-                  value={password}
-                  onChangeText={(value) => setPassword(value.trim())}
-                  placeholder="Enter Password"
-                  onSubmitEditing={() => passwordCheckerRef.current.focus()}
-                />
-                <TouchableOpacity onPress={() => setPasswordVisible(!passwordVisible)} style={{ marginLeft: 8 }}>
-                  <Ionicons name={passwordVisible ? "eye-off" : "eye"} size={24} color="black" />
+        <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+          <View style={{ flex: 1 }}>
+            <SafeAreaView style={{ flex: 1 }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'flex-start'}}>
+                <TouchableOpacity onPress={() => navigation.navigate('Welcome')} style={tw`p-2`}>
+                  <Ionicons name="chevron-back-outline" size={34} color="#FF8001"/>
                 </TouchableOpacity>
               </View>
-              <Text style={{ color: 'black', marginLeft: 8 }}>Confirm Password</Text>
-              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: -25 }}>
+                <Image source={require('../assets/icons/csuf.png')} style={{ width: 175, height: 175}} />
+              </View>
+            </SafeAreaView>
+            <View style={{ backgroundColor: 'white', paddingHorizontal: 8, paddingTop: 8, borderTopLeftRadius: 35, borderTopRightRadius: 35 }}>
+              <View style={{ marginBottom: 8 }}>
+                <Text style={{ color: 'black', marginLeft: 8 }}>First Name</Text>
                 <TextInput
-                  ref={passwordCheckerRef}
-                  style={{ flex: 1, padding: 16, backgroundColor: '#d3d3d3', color: 'black', borderRadius: 20, marginBottom: 14 }}
-                  secureTextEntry={!passwordCheckerVisible}
-                  value={passwordChecker}
-                  onChangeText={(value) => setPasswordChecker(value.trim())}
-                  placeholder="Confirm Password"
-                  onSubmitEditing={handleSubmit}
+                  ref={firstNameRef}
+                  style={{ padding: 16, backgroundColor: '#d3d3d3', color: 'black', borderRadius: 20, marginBottom: 8 }}
+                  value={firstName}
+                  onChangeText={(value) => setFirstname(value.trim())}
+                  placeholder="Enter First Name"
+                  onSubmitEditing={() => lastNameRef.current.focus()}
                 />
-                <TouchableOpacity onPress={() => setPasswordCheckerVisible(!passwordCheckerVisible)} style={{ marginLeft: 8 }}>
-                  <Ionicons name={passwordCheckerVisible ? "eye-off" : "eye"} size={24} color="black" />
+                <Text style={{ color: 'black', marginLeft: 8 }}>Last Name</Text>
+                <TextInput
+                  ref={lastNameRef}
+                  style={{ padding: 16, backgroundColor: '#d3d3d3', color: 'black', borderRadius: 20, marginBottom: 8 }}
+                  value={lastName}
+                  onChangeText={(value) => setLastname(value.trim())}
+                  placeholder="Enter Last Name"
+                  onSubmitEditing={() => emailRef.current.focus()}
+                />
+                <Text style={{ color: 'black', marginLeft: 8 }}>Email Address</Text>
+                <TextInput
+                  ref={emailRef}
+                  style={{ padding: 16, backgroundColor: '#d3d3d3', color: 'black', borderRadius: 20, marginBottom: 8 }}
+                  value={email}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  onChangeText={(value) => setEmail(value.trim())}
+                  placeholder="email@csu.fullerton.edu"
+                  onSubmitEditing={() => passwordRef.current.focus()}
+                />
+                <Text style={{ color: 'black', marginLeft: 8 }}>Password</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+                  <TextInput
+                    ref={passwordRef}
+                    style={{ flex: 1, padding: 16, backgroundColor: '#d3d3d3', color: 'black', borderRadius: 20, marginBottom: 8 }}
+                    secureTextEntry={!passwordVisible}
+                    value={password}
+                    onChangeText={(value) => setPassword(value.trim())}
+                    placeholder="Enter Password"
+                    onSubmitEditing={() => passwordCheckerRef.current.focus()}
+                  />
+                  <TouchableOpacity onPress={() => setPasswordVisible(!passwordVisible)} style={{ marginLeft: 8 }}>
+                    <Ionicons name={passwordVisible ? "eye-off" : "eye"} size={24} color="black" />
+                  </TouchableOpacity>
+                </View>
+                <Text style={{ color: 'black', marginLeft: 8 }}>Confirm Password</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+                  <TextInput
+                    ref={passwordCheckerRef}
+                    style={{ flex: 1, padding: 16, backgroundColor: '#d3d3d3', color: 'black', borderRadius: 20, marginBottom: 14 }}
+                    secureTextEntry={!passwordCheckerVisible}
+                    value={passwordChecker}
+                    onChangeText={(value) => setPasswordChecker(value.trim())}
+                    placeholder="Confirm Password"
+                    onSubmitEditing={handleSubmit}
+                  />
+                  <TouchableOpacity onPress={() => setPasswordCheckerVisible(!passwordCheckerVisible)} style={{ marginLeft: 8 }}>
+                    <Ionicons name={passwordCheckerVisible ? "eye-off" : "eye"} size={24} color="black" />
+                  </TouchableOpacity>
+                </View>
+                {!passwordValid}
+                {errorMessage && (
+                  <Text style={{ color: 'red', textAlign: 'center', marginTop: 10 }}>
+                    {errorMessage}
+                  </Text>
+                )}
+                <TouchableOpacity
+                  style={{ padding: 24, backgroundColor: '#FF8001', borderRadius: 20, marginBottom: 8 }}
+                  onPress={handleSubmit}
+                >
+                  <Text style={{ fontSize: 20, fontWeight: 'bold', textAlign: 'center', color: 'white' }}>
+                    Sign Up
+                  </Text>
                 </TouchableOpacity>
               </View>
-              {!passwordValid}
-              {errorMessage && (
-                <Text style={{ color: 'red', textAlign: 'center', marginTop: 10 }}>
-                  {errorMessage}
-                </Text>
-              )}
-              <TouchableOpacity
-                style={{ padding: 24, backgroundColor: '#FF8001', borderRadius: 20, marginBottom: 8 }}
-                onPress={handleSubmit}
-              >
-                <Text style={{ fontSize: 20, fontWeight: 'bold', textAlign: 'center', color: 'white' }}>
-                  Sign Up
-                </Text>
-              </TouchableOpacity>
-            </View>
-            <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 8, marginBottom: 20 }}>
-              <Text style={{ color: 'black', fontWeight: 'bold' }}>Already have an account?</Text>
-              <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-                <Text style={{ fontWeight: 'bold', color: '#FF8001', marginLeft: 5 }}> Login</Text>
-              </TouchableOpacity>
+              <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 8, marginBottom: 20 }}>
+                <Text style={{ color: 'black', fontWeight: 'bold' }}>Already have an account?</Text>
+                <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+                  <Text style={{ fontWeight: 'bold', color: '#FF8001', marginLeft: 5 }}> Login</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
-        </View>
+        </ScrollView>
       </KeyboardAvoidingView>
     </TouchableWithoutFeedback>
   );

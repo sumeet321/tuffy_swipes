@@ -1,29 +1,49 @@
 import React, { useState } from 'react';
-import { View, Text, Image, Modal, TouchableOpacity } from 'react-native';
+import { View, Text, Image, Modal, TouchableOpacity, Clipboard } from 'react-native';
 import tw from 'tailwind-react-native-classnames';
 
 const ReceiverMessage = ({ message }) => {
   const [modalVisible, setModalVisible] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   // If message or message.photoURL is not defined or message.message is empty, return null
   if (!message || !message.photoURL || !message.message.trim()) {
     return null;
   }
 
+  // Function to copy the message to the clipboard and show feedback
+  const copyToClipboard = () => {
+    Clipboard.setString(message.message);
+    setCopied(true);
+    // Hide the "Copied!" message after a short delay
+    setTimeout(() => setCopied(false), 1500);
+  };
+
   // Render the ReceiverMessage component
   return (
-    <View style={[tw`bg-red-400 rounded-lg rounded-tl-none px-5 py-3 mx-4 my-2 ml-14`, { alignSelf: 'flex-start' }]}>
-      {/* Text component displaying the message */}
-      <Text style={tw`text-white`}>{message.message}</Text>
-      
-      {/* TouchableOpacity to make the image clickable */}
-      <TouchableOpacity style={tw`absolute -top-1 -left-14`} onPress={() => setModalVisible(true)}>
-        {/* Image component displaying the sender's photo */}
-        <Image
-          style={tw`h-12 w-12 rounded-full`}
-          source={{ uri: message.photoURL }}
-        />
-      </TouchableOpacity>
+    <View style={{ flexDirection: 'column', alignItems: 'flex-start' }}>
+      <View style={[tw`bg-red-400 rounded-lg rounded-tl-none px-5 py-3 mx-4 my-2 ml-14`, { alignSelf: 'flex-start' }]}>
+        {/* Text component displaying the message */}
+        <TouchableOpacity onLongPress={copyToClipboard}>
+          <Text style={tw`text-white`}>{message.message}</Text>
+        </TouchableOpacity>
+        
+        {/* TouchableOpacity to make the image clickable */}
+        <TouchableOpacity style={tw`absolute -top-1 -left-14`} onPress={() => setModalVisible(true)}>
+          {/* Image component displaying the sender's photo */}
+          <Image
+            style={tw`h-12 w-12 rounded-full`}
+            source={{ uri: message.photoURL }}
+          />
+        </TouchableOpacity>
+      </View>
+
+      {/* "Copied!" message */}
+      {copied && (
+        <View style={[tw`bg-gray-800 rounded-full px-4 py-2 mx-4 left-10`, { alignSelf: 'flex-start' }]}>
+          <Text style={tw`text-white text-sm`}>Copied!</Text>
+        </View>
+      )}
 
       {/* Modal for displaying enlarged image */}
       <Modal

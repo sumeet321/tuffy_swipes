@@ -114,6 +114,7 @@ export default function InformationScreen() {
     }
   }, [user, image, db]);
 
+
   // Function to refresh user data every second
   useEffect(() => {
     const intervalId = setInterval(() => {
@@ -287,22 +288,23 @@ export default function InformationScreen() {
                 }}>
                 <Text style={tw`text-center text-white text-xl`}>Create Profile</Text>
               </TouchableOpacity>
-
-              <TouchableOpacity
-                onPress={handleLogout}
-                style={{
-                  width: 150, // Adjusted width
-                  padding: 12, // Adjusted padding
-                  borderRadius: 20,
-                  marginTop: 10,
-                  marginBottom: 10,
-                  backgroundColor: '#FF8001',
-                  marginLeft: 'auto',
-                  marginRight: 'auto',
-                  top: 10,
-                }}>
-                <Text style={tw`text-center text-white text-xl`}>Logout</Text>
-              </TouchableOpacity>
+              
+              
+              {/* <TouchableOpacity
+                    onPress={handleLogout}
+                    style={{
+                      width: 150,
+                      padding: 12,
+                      borderRadius: 20,
+                      marginTop: 10,
+                      marginBottom: 10,
+                      backgroundColor: '#FF8001',
+                      marginLeft: 'auto',
+                      marginRight: 'auto',
+                      top: 10,
+                    }}>
+                    <Text style={tw`text-center text-white text-xl`}>Logout</Text>
+                  </TouchableOpacity> */}
               </View>
             </>
           ) : (

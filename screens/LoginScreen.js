@@ -9,11 +9,12 @@ import {
   SafeAreaView,
   KeyboardAvoidingView,
   TouchableWithoutFeedback,
-  Alert, // Import Alert for displaying error messages
+  ScrollView,
+  Alert,
 } from 'react-native';
 import { themeColors } from '../theme';
 import { useNavigation } from '@react-navigation/native';
-import { signInWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../config/firebase';
 import { Ionicons } from '@expo/vector-icons';
 import tw from 'tailwind-react-native-classnames';
@@ -23,9 +24,9 @@ export default function LoginScreen() {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [errorMessage, setErrorMessage] = useState(null); // State for error message
+  const [errorMessage, setErrorMessage] = useState(null);
   const [passwordVisible, setPasswordVisible] = useState(false);
-
+  
   const passwordRef = useRef(null);
 
   const handleSubmit = async () => {
@@ -34,13 +35,15 @@ export default function LoginScreen() {
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
 
-        if (user && user.photoURL) {
-          updateProfile(user, { photoURL: user.photoURL });
+        if (user && user.emailVerified) {
+          navigation.navigate('Home');
+        } else {
+          setErrorMessage('Please verify your email before logging in.');
+          Alert.alert('Error', 'Please verify your email before logging in.');
         }
-        navigation.navigate('Home');
       } catch (err) {
         console.log('got error: ', err.message);
-        setErrorMessage('Invalid email or password. Please try again.'); // Set error message
+        setErrorMessage('Invalid email or password. Please try again.');
         Alert.alert('Error', 'Invalid email or password. Please try again.');
       }
     }
@@ -49,11 +52,11 @@ export default function LoginScreen() {
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <KeyboardAvoidingView
-        style={{ flex: 1, backgroundColor: themeColors.bg}}
-        behavior='padding' // Adjust behavior based on your needs
+        style={{ flex: 1, backgroundColor: themeColors.bg }}
+        behavior={Platform.OS === 'ios' ? 'padding' : null}
         enabled
       >
-        <View style={{ flex: 1 }}>
+        <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
           <SafeAreaView style={{ flex: 1 }}>
             <View style={{ flexDirection: 'row', justifyContent: 'flex-start' }}>
                 <TouchableOpacity onPress={() => navigation.goBack()} style={tw`p-2`}>
@@ -88,7 +91,7 @@ export default function LoginScreen() {
                 autoCapitalize="none"
                 autoCorrect={false}
                 onChangeText={(value) => setEmail(value.trim())}
-                onSubmitEditing={() => passwordRef.current.focus()} // Move to next input
+                onSubmitEditing={() => passwordRef.current.focus()}
               />
               <Text style={{ color: 'black', marginLeft: 8 }}>Password</Text>
               <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 14 }}>
@@ -133,7 +136,7 @@ export default function LoginScreen() {
               </TouchableOpacity>
             </View>
           </View>
-        </View>
+        </ScrollView>
       </KeyboardAvoidingView>
     </TouchableWithoutFeedback>
   );
