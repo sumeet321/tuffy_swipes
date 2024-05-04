@@ -69,12 +69,10 @@ export default function SignUpScreen() {
 
 
   const handleSubmit = async () => {
-    /*
     if (!email.endsWith('@csu.fullerton.edu')) {
       setErrorMessage('Please use a valid CSUF email address.');
       return;
     }
-    */
   
     if (password !== passwordChecker) {
       setErrorMessage('Passwords do not match.');
