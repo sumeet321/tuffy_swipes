@@ -6,19 +6,20 @@ import {
   Button,
   Image,
   TextInput,
-  TouchableWithoutFeedback,
   Keyboard,
+  Platform,
+  Modal,
+  ScrollView,
 } from 'react-native';
 import { signOut, updateProfile, getAuth } from 'firebase/auth';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
-import { auth, db, storage} from '../config/firebase';
+import { auth, db, storage } from '../config/firebase';
 import { useNavigation } from '@react-navigation/native';
 import tw from 'tailwind-react-native-classnames';
 import useAuth from '../hooks/useAuth';
 import * as Permissions from 'expo-permissions';
 import { doc, setDoc, serverTimestamp, getFirestore, getDoc } from 'firebase/firestore';
-import {Ionicons, Foundation} from '@expo/vector-icons';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
@@ -41,29 +42,26 @@ export default function InformationScreen() {
   const db = getFirestore(); // Initialize Firestore
   const storage = getStorage();
   const storageRef = ref(storage, 'path/to/file');
-  const [birthday, setBirthday] = useState(() => {
-    const eighteenYearsAgo = new Date();
-    eighteenYearsAgo.setFullYear(eighteenYearsAgo.getFullYear() - 18);
-    return eighteenYearsAgo;
-  });
+  const [selectedDate, setSelectedDate] = useState(new Date()); // State for selected date
+  const [showModal, setShowModal] = useState(false); // State for modal visibility
+  const [ageInput, setAgeInput] = useState(''); // State for age input
 
-  
   const updateUserProfile = () => {
-    const userAge = calculateAge(birthday);
+    const userAge = Platform.OS === 'android' ? parseInt(ageInput) : calculateAge(selectedDate);
     if (userAge < 18) {
       alert('You must be 18 years old or older to create an account.');
       return;
     }
-  
+
     // Check if email is verified
     if (!user.emailVerified) {
       alert('Please verify your email before creating a profile.');
       return;
     }
-    
+
     // Trim trailing blank spaces from major
     const trimmedMajor = major ? major.trim() : null;
-  
+
     setDoc(doc(db, 'users', user.uid), {
       id: user.uid,
       firstName: firstName,
@@ -71,7 +69,7 @@ export default function InformationScreen() {
       email: user.email,
       photoURL: image,
       major: trimmedMajor,
-      birthday: birthday,
+      birthday: selectedDate, // Use selectedDate instead of birthday
       age: userAge,
       gender: gender,
       preferences: preferences,
@@ -84,7 +82,6 @@ export default function InformationScreen() {
         alert(error.message);
       });
   };
-  
 
   useEffect(() => {
     if (user) {
@@ -104,7 +101,7 @@ export default function InformationScreen() {
           if (docSnapshot.exists()) {
             const userData = docSnapshot.data();
             if (userData) {
-              setBirthday(userData.birthday ? userData.birthday.toDate() : new Date());
+              setSelectedDate(userData.birthday ? userData.birthday.toDate() : new Date()); // Use selectedDate instead of birthday
             }
           }
         })
@@ -113,7 +110,6 @@ export default function InformationScreen() {
         });
     }
   }, [user, image, db]);
-
 
   // Function to refresh user data every second
   useEffect(() => {
@@ -133,13 +129,13 @@ export default function InformationScreen() {
   const pickImage = async () => {
     try {
       const { status } = await Permissions.askAsync(Permissions.MEDIA_LIBRARY);
-    
+
       if (status === 'granted') {
         let result = await ImagePicker.launchImageLibraryAsync({
           mediaTypes: ImagePicker.MediaTypeOptions.Images,
           allowsEditing: true,
         });
-    
+
         if (!result.cancelled) {
           const response = await fetch(result.uri);
           const blob = await response.blob();
@@ -182,136 +178,142 @@ export default function InformationScreen() {
     }
   };
 
+  const toggleDatePicker = () => {
+    setShowModal(true); // Show the modal
+  };
+
+  const handleConfirmDate = () => {
+    setShowModal(false); // Close the modal after selecting the date
+  };
+
+  const closeModal = () => {
+    setShowModal(false); // Close the modal
+  };
+
   return (
     <SafeAreaView style={tw`flex-1`}>
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <TouchableOpacity onPress={Keyboard.dismiss} style={{ flex: 1 }}>
         <View style={{ flex: 1 }}>
-          {user ? (
-            <>
-              <Text style={tw`text-2xl font-bold p-1 font-bold text-center`}>
-                Welcome {firstName} {lastName}
-              </Text>
-              <Text style={tw`text-center p-4 font-bold text-red-400`}>
-                Step 1: The Profile Picture
-              </Text>
-              <View style={tw`items-center`}>
-                <TouchableOpacity>
-                  <Button title='Choose Picture' onPress={pickImage} />
-                </TouchableOpacity>
-              </View>
-              <View style={tw`items-center`}>
-                <TouchableOpacity>
-                  <Button title='Take Picture' onPress={takePicture} />
-                </TouchableOpacity>
-              </View>
+          <Text style={tw`text-2xl font-bold p-1 font-bold text-center`}>
+            Welcome {firstName} {lastName}
+          </Text>
+          <Text style={tw`text-center p-4 font-bold text-red-400`}>
+            Step 1: The Profile Picture
+          </Text>
+          <View style={tw`items-center`}>
+            <TouchableOpacity>
+              <Button title='Choose Picture' onPress={pickImage} />
+            </TouchableOpacity>
+          </View>
+          <View style={tw`items-center`}>
+            <TouchableOpacity>
+              <Button title='Take Picture' onPress={takePicture} />
+            </TouchableOpacity>
+          </View>
 
-              <Text style={tw`text-center p-4 font-bold text-red-400`}>Step 2: Major</Text>
-              <TextInput
-                value={major}
-                onChangeText={(text) => setMajor(text)}
-                style={tw`text-center text-xl pb-2`}
-                placeholder='What is your major?'
-              />
+          <Text style={tw`text-center p-4 font-bold text-red-400`}>Step 2: Major</Text>
+          <TextInput
+            value={major}
+            onChangeText={(text) => setMajor(text)}
+            style={tw`text-center text-xl pb-2`}
+            placeholder='What is your major?'
+          />
 
-              <Text style={tw`text-center p-4 font-bold text-red-400`}>Step 3: Birth Year</Text>
-              <DateTimePicker
-                value={birthday}
-                mode="date"
-                display="spinner"
-                maximumDate={new Date()} // Limit to current date
-                minimumDate={new Date(birthday.getFullYear() - 18, birthday.getMonth(), birthday.getDate())} // Limit to 18 years ago from current date
-                onChange={(event, selectedDate) => {
-                  const currentDate = selectedDate || birthday;
-                  setBirthday(currentDate);
-                }}
-              />
-              <Text style={tw`text-center font-bold text-red-400`}>
-                Age: {calculateAge(birthday)}
-              </Text>
-
-              <Text style={tw`text-center p-4 font-bold text-red-400`}>Step 4: Gender</Text>
-              <View style={tw`flex-row items-center justify-center`}>
-                <TouchableOpacity
-                  onPress={() => setGender('male')}
-                  style={tw`p-2 bg-blue-500 rounded-md mx-2 ${
-                    gender === 'male' ? 'bg-opacity-70' : 'bg-opacity-20'
-                  }`}>
-                  <Text style={tw`text-white`}>Male</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => setGender('female')}
-                  style={tw`p-2 bg-pink-500 rounded-md mx-2 ${
-                    gender === 'female' ? 'bg-opacity-70' : 'bg-opacity-20'
-                  }`}>
-                  <Text style={tw`text-white`}>Female</Text>
-                </TouchableOpacity>
-              </View>
-
-              <Text style={tw`text-center p-4 font-bold text-red-400`}>Step 5: Preferences</Text>
-              <View style={tw`flex-row items-center justify-center`}>
-                <TouchableOpacity
-                  onPress={() => setPreferences('male')}
-                  style={tw`p-2 bg-blue-500 rounded-md mx-2 ${
-                    preferences === 'male' ? 'bg-opacity-70' : 'bg-opacity-20'
-                  }`}>
-                  <Text style={tw`text-white`}>Male</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => setPreferences('female')}
-                  style={tw`p-2 bg-pink-500 rounded-md mx-2 ${
-                    preferences === 'female' ? 'bg-opacity-70' : 'bg-opacity-20'
-                  }`}>
-                  <Text style={tw`text-white`}>Female</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => setPreferences('both')}
-                  style={tw`p-2 bg-purple-500 rounded-md mx-2 ${
-                    preferences === 'both' ? 'bg-opacity-70' : 'bg-opacity-20'
-                  }`}>
-                  <Text style={tw`text-white`}>Both</Text>
-                </TouchableOpacity>
-              </View>
-
-              <View style={tw`flex-row items-center justify-center`}>
-              <TouchableOpacity
-                onPress={updateUserProfile}
-                style={{
-                  width: 150, // Adjusted width
-                  padding: 12, // Adjusted padding
-                  borderRadius: 20,
-                  marginTop: 10,
-                  marginBottom: 10,
-                  backgroundColor: '#FF8001',
-                  marginLeft: 'auto',
-                  marginRight: 'auto',
-                  top: 10,
-                }}>
-                <Text style={tw`text-center text-white text-xl`}>Create Profile</Text>
-              </TouchableOpacity>
-              
-              
-              {/* <TouchableOpacity
-                    onPress={handleLogout}
-                    style={{
-                      width: 150,
-                      padding: 12,
-                      borderRadius: 20,
-                      marginTop: 10,
-                      marginBottom: 10,
-                      backgroundColor: '#FF8001',
-                      marginLeft: 'auto',
-                      marginRight: 'auto',
-                      top: 10,
-                    }}>
-                    <Text style={tw`text-center text-white text-xl`}>Logout</Text>
-                  </TouchableOpacity> */}
-              </View>
-            </>
-          ) : (
-            <Text>Loading...</Text>
+          <Text style={tw`text-center p-4 font-bold text-red-400`}>Step 3: Birth Year</Text>
+          {Platform.OS === 'ios' && (
+          <TouchableOpacity style={tw`bg-blue-500 rounded-md mx-24 p-2 bottom-2`} onPress={toggleDatePicker}>
+            <Text style={tw`text-white text-center`}>Select Birth Year</Text>
+          </TouchableOpacity>
           )}
+          <Modal
+            visible={showModal}
+            transparent={true}
+            animationType='fade'
+            onRequestClose={closeModal} // Close the modal when the back button is pressed on Android
+          >
+            <View style={tw`flex-1 justify-center items-center bg-gray-900 bg-opacity-50`}>
+              <View style={tw`bg-white p-4 rounded-md w-80`}>
+                <DateTimePicker
+                  value={selectedDate}
+                  mode="date"
+                  display="spinner"
+                  maximumDate={new Date()} // Limit to current date
+                  minimumDate={new Date(selectedDate.getFullYear() - 18, selectedDate.getMonth(), selectedDate.getDate())} // Limit to 18 years ago from current date
+                  onChange={(event, date) => setSelectedDate(date)} // Update selectedDate state
+                />
+                <TouchableOpacity onPress={handleConfirmDate}>
+                  <Text style={tw`text-center text-blue-500 mt-2`}>Confirm</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Modal>
+
+          {Platform.OS === 'android' && (
+            <TextInput
+              value={ageInput}
+              onChangeText={(text) => setAgeInput(text)}
+              style={tw`text-center text-xl pb-2`}
+              placeholder='Enter your age'
+              keyboardType='numeric'
+            />
+          )}
+
+          <Text style={tw`text-center font-bold text-red-400`}>
+            Age: {Platform.OS === 'android' ? ageInput : calculateAge(selectedDate)}
+          </Text>
+
+          <Text style={tw`text-center p-4 font-bold text-red-400`}>Step 4: Gender</Text>
+          <View style={tw`flex-row items-center justify-center`}>
+            <TouchableOpacity
+              onPress={() => setGender('male')}
+              style={tw`p-2 bg-blue-500 rounded-md mx-2 ${gender === 'male' ? 'bg-opacity-70' : 'bg-opacity-20'}`}>
+              <Text style={tw`text-white`}>Male</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setGender('female')}
+              style={tw`p-2 bg-pink-500 rounded-md mx-2 ${gender === 'female' ? 'bg-opacity-70' : 'bg-opacity-20'}`}>
+              <Text style={tw`text-white`}>Female</Text>
+            </TouchableOpacity>
+          </View>
+
+          <Text style={tw`text-center p-4 font-bold text-red-400`}>Step 5: Preferences</Text>
+          <View style={tw`flex-row items-center justify-center`}>
+            <TouchableOpacity
+              onPress={() => setPreferences('male')}
+              style={tw`p-2 bg-blue-500 rounded-md mx-2 ${preferences === 'male' ? 'bg-opacity-70' : 'bg-opacity-20'}`}>
+              <Text style={tw`text-white`}>Male</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setPreferences('female')}
+              style={tw`p-2 bg-pink-500 rounded-md mx-2 ${preferences === 'female' ? 'bg-opacity-70' : 'bg-opacity-20'}`}>
+              <Text style={tw`text-white`}>Female</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setPreferences('both')}
+              style={tw`p-2 bg-purple-500 rounded-md mx-2 ${preferences === 'both' ? 'bg-opacity-70' : 'bg-opacity-20'}`}>
+              <Text style={tw`text-white`}>Both</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={tw`flex-row items-center justify-center`}>
+            <TouchableOpacity
+              onPress={updateUserProfile}
+              style={{
+                width: 150, // Adjusted width
+                padding: 12, // Adjusted padding
+                borderRadius: 20,
+                marginTop: 10,
+                marginBottom: 10,
+                backgroundColor: '#FF8001',
+                marginLeft: 'auto',
+                marginRight: 'auto',
+                top: 10,
+              }}>
+              <Text style={tw`text-center text-white text-xl`}>Create Profile</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      </TouchableWithoutFeedback>
+      </TouchableOpacity>
     </SafeAreaView>
   );
 }

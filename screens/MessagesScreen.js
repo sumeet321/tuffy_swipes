@@ -65,7 +65,7 @@ const MessagesScreen = ({ refresh }) => { // Pass refresh prop
                 <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                     <FlatList
                         data={messages}
-                        inverted={-1}
+                        inverted={true}
                         style={tw`pl-4`}
                         keyExtractor={item => item.id}
                         renderItem={({ item: message }) =>
