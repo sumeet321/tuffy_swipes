@@ -14,7 +14,7 @@ Tuffy Swipes is an innovative mobile application designed exclusively for Califo
 To run the Tuffy Swipes app on your device, follow these steps:
 1. Download the Expo Go application on your mobile device (Do not need to create an account)
 2. Scan the QR code below using the camera app or click on the 'Tuffy Swipes' deployment link.
-<img width="452" alt="Screenshot 2024-04-25 at 2 35 27 PM" src="https://github.com/sumeet321/tuffy_swipes/assets/69872102/84b3c9fc-94f0-4174-92ad-cb83b043c09b">
+<img width="396" alt="image" src="https://github.com/sumeet321/tuffy_swipes/assets/69872102/b3b45233-e8a0-4475-9174-48fba7eff562">
 
 3. Tuffy Swipes will launch successfully
    
