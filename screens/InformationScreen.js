@@ -1,16 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  Button,
-  Image,
-  TextInput,
-  Keyboard,
-  Platform,
-  Modal,
-  ScrollView,
-} from 'react-native';
+import { View, Text, TouchableOpacity, Button, TextInput, Keyboard, Platform } from 'react-native';
 import { signOut, updateProfile, getAuth } from 'firebase/auth';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
@@ -43,7 +32,6 @@ export default function InformationScreen() {
   const storage = getStorage();
   const storageRef = ref(storage, 'path/to/file');
   const [selectedDate, setSelectedDate] = useState(new Date()); // State for selected date
-  const [showModal, setShowModal] = useState(false); // State for modal visibility
   const [ageInput, setAgeInput] = useState(''); // State for age input
 
   const updateUserProfile = () => {
@@ -178,16 +166,10 @@ export default function InformationScreen() {
     }
   };
 
-  const toggleDatePicker = () => {
-    setShowModal(true); // Show the modal
-  };
-
-  const handleConfirmDate = () => {
-    setShowModal(false); // Close the modal after selecting the date
-  };
-
-  const closeModal = () => {
-    setShowModal(false); // Close the modal
+  const handleDateChange = (event, date) => {
+    if (date !== undefined) {
+      setSelectedDate(date);
+    }
   };
 
   return (
@@ -200,6 +182,7 @@ export default function InformationScreen() {
           <Text style={tw`text-center p-4 font-bold text-red-400`}>
             Step 1: The Profile Picture
           </Text>
+          
           <View style={tw`items-center`}>
             <TouchableOpacity>
               <Button title='Choose Picture' onPress={pickImage} />
@@ -221,33 +204,17 @@ export default function InformationScreen() {
 
           <Text style={tw`text-center p-4 font-bold text-red-400`}>Step 3: Birth Year</Text>
           {Platform.OS === 'ios' && (
-          <TouchableOpacity style={tw`bg-blue-500 rounded-md mx-24 p-2 bottom-2`} onPress={toggleDatePicker}>
-            <Text style={tw`text-white text-center`}>Select Birth Year</Text>
-          </TouchableOpacity>
+            <>
+              <DateTimePicker
+                value={selectedDate}
+                mode="date"
+                display="spinner"
+                maximumDate={new Date()} // Limit to current date
+                minimumDate={new Date(selectedDate.getFullYear() - 18, selectedDate.getMonth(), selectedDate.getDate())} // Limit to 18 years ago from current date
+                onChange={handleDateChange}
+              />
+            </>
           )}
-          <Modal
-            visible={showModal}
-            transparent={true}
-            animationType='fade'
-            onRequestClose={closeModal} // Close the modal when the back button is pressed on Android
-          >
-            <View style={tw`flex-1 justify-center items-center bg-gray-900 bg-opacity-50`}>
-              <View style={tw`bg-white p-4 rounded-md w-80`}>
-                <DateTimePicker
-                  value={selectedDate}
-                  mode="date"
-                  display="spinner"
-                  maximumDate={new Date()} // Limit to current date
-                  minimumDate={new Date(selectedDate.getFullYear() - 18, selectedDate.getMonth(), selectedDate.getDate())} // Limit to 18 years ago from current date
-                  onChange={(event, date) => setSelectedDate(date)} // Update selectedDate state
-                />
-                <TouchableOpacity onPress={handleConfirmDate}>
-                  <Text style={tw`text-center text-blue-500 mt-2`}>Confirm</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </Modal>
-
           {Platform.OS === 'android' && (
             <TextInput
               value={ageInput}
